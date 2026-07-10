@@ -36,4 +36,24 @@ springdoc:
     path: /api/v1/inventory/swagger-ui.html
     tags-sorter: alpha
     operations-sorter: alpha
-  show-actuator: false
+
+
+logstash.host: ${LOGSTASH_HOST:localhost}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: always
+  health:
+    rabbit:
+      enabled: true
+    db:
+      enabled: true
+    redis:
+      enabled: true

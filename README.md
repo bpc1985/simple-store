@@ -120,6 +120,7 @@ docker-compose logs -f catalog-service   # single service
 | Admin Dashboard | http://localhost:8091 | Admin management panel |
 | Gateway (API) | http://localhost:8080 | API entry point |
 | RabbitMQ Management | http://localhost:15672 | Message broker UI (`simplestore` / `simplestore`) |
+| Kibana (ELK) | http://localhost:5601 | Observability: logs, metrics, traces |
 
 **Swagger UI** (per service via gateway):
 
@@ -250,6 +251,61 @@ Seeded automatically on first startup:
 |------|-------|----------|
 | Admin | `admin@store.com` | `Admin123!` |
 | User | `user@store.com` | `User123!` |
+
+## Observability — ELK Stack
+
+The project ships with full **Logs, Metrics, and Traces** via the ELK stack:
+
+```
+┌─────────────────────────────────────────────────┐
+│                ELK Stack (Docker)                │
+│  Elasticsearch :9200                             │
+│  Logstash      :5000  ← JSON logs from services │
+│  Kibana        :5601  ← dashboards & APM UI     │
+│  APM Server    :8200  ← traces from services    │
+└─────────────────────────────────────────────────┘
+         ▲                    ▲
+         │ (structured logs)  │ (distributed traces)
+         │                    │
+┌────────┴────────────────────┴──────────────────┐
+│            Spring Boot Services                 │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐        │
+│  │ Identity │ │ Catalog  │ │  Order   │ ...    │
+│  │ Logback  │ │ Logback  │ │ Logback  │        │
+│  │ JSON     │ │ JSON     │ │ JSON     │        │
+│  │ +APM     │ │ +APM     │ │ +APM     │        │
+│  └──────────┘ └──────────┘ └──────────┘        │
+└────────────────────────────────────────────────┘
+```
+
+### What's instrumented
+
+| Pillar | Technology | Access |
+|--------|-----------|--------|
+| **Logs** | Logstash JSON encoder → Logstash TCP → Elasticsearch | Kibana Discover |
+| **Metrics** | Micrometer Elastic registry → Elasticsearch | Kibana Dashboard |
+| **Traces** | Elastic APM agent (auto-instruments HTTP, DB, messaging) | Kibana APM |
+| **Health** | Spring Boot Actuator liveness/readiness probes | `/actuator/health` |
+
+### Kibana URLs
+
+| Feature | URL |
+|---------|-----|
+| Kibana Home | http://localhost:5601 |
+| APM (traces) | http://localhost:5601/app/apm |
+| Logs (discover) | http://localhost:5601/app/discover |
+| Dashboards | http://localhost:5601/app/dashboards |
+
+### Health endpoints (per service)
+
+| Service | Health |
+|---------|--------|
+| Identity | http://localhost:8081/actuator/health |
+| Catalog | http://localhost:8082/actuator/health |
+| Cart | http://localhost:8083/actuator/health |
+| Order | http://localhost:8084/actuator/health |
+| Inventory | http://localhost:8085/actuator/health |
+| Payment | http://localhost:8087/actuator/health |
 
 ## Project Structure
 

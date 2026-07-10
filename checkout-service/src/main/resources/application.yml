@@ -36,4 +36,24 @@ spring:
       stockReservationFailedConsumer-in-0.consumer.exchangeType: fanout
       paymentSucceededConsumer-in-0.consumer.exchangeType: fanout
       paymentFailedConsumer-in-0.consumer.exchangeType: fanout
-      stockReservationCancelledConsumer-in-0.consumer.exchangeType: fanout
+
+
+logstash.host: ${LOGSTASH_HOST:localhost}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: always
+  health:
+    rabbit:
+      enabled: true
+    db:
+      enabled: true
+    redis:
+      enabled: true

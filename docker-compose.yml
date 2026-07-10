@@ -45,6 +45,56 @@ services:
       retries: 5
 
   # ============================================
+  # Observability — ELK Stack
+  # ============================================
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -q 'green\|yellow'"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.15.0
+    volumes:
+      - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
+    ports:
+      - "5000:5000"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.15.0
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+
+  apm-server:
+    image: docker.elastic.co/apm/apm-server:8.15.0
+    ports:
+      - "8200:8200"
+    environment:
+      - output.elasticsearch.hosts=["elasticsearch:9200"]
+      - apm-server.host=0.0.0.0:8200
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+
+  # ============================================
   # Microservices
   # ============================================
   identity-service:
@@ -60,6 +110,10 @@ services:
       SPRING_RABBITMQ_PASSWORD: simplestore
       SPRING_REDIS_HOST: redis
       JWT_SECRET: c2ltcGxlLXN0b3JlLXNlY3JldC1rZXktZm9yLWp3dC10b2tlbnMtc2hhcmVkLWFjcm9zcy1zZXJ2aWNlcw==
+      ELASTIC_APM_SERVICE_NAME: identity-service
+      ELASTIC_APM_SERVER_URL: http://apm-server:8200
+      ELASTIC_APM_APPLICATION_PACKAGES: com.simplestore
+      LOGSTASH_HOST: logstash
     depends_on:
       postgres:
         condition: service_healthy
@@ -78,6 +132,10 @@ services:
       SPRING_RABBITMQ_USERNAME: simplestore
       SPRING_RABBITMQ_PASSWORD: simplestore
       JWT_SECRET: c2ltcGxlLXN0b3JlLXNlY3JldC1rZXktZm9yLWp3dC10b2tlbnMtc2hhcmVkLWFjcm9zcy1zZXJ2aWNlcw==
+      ELASTIC_APM_SERVICE_NAME: catalog-service
+      ELASTIC_APM_SERVER_URL: http://apm-server:8200
+      ELASTIC_APM_APPLICATION_PACKAGES: com.simplestore
+      LOGSTASH_HOST: logstash
     depends_on:
       postgres:
         condition: service_healthy
@@ -94,6 +152,10 @@ services:
       SPRING_RABBITMQ_USERNAME: simplestore
       SPRING_RABBITMQ_PASSWORD: simplestore
       JWT_SECRET: c2ltcGxlLXN0b3JlLXNlY3JldC1rZXktZm9yLWp3dC10b2tlbnMtc2hhcmVkLWFjcm9zcy1zZXJ2aWNlcw==
+      ELASTIC_APM_SERVICE_NAME: cart-service
+      ELASTIC_APM_SERVER_URL: http://apm-server:8200
+      ELASTIC_APM_APPLICATION_PACKAGES: com.simplestore
+      LOGSTASH_HOST: logstash
     depends_on:
       redis:
         condition: service_healthy
@@ -112,6 +174,10 @@ services:
       SPRING_RABBITMQ_USERNAME: simplestore
       SPRING_RABBITMQ_PASSWORD: simplestore
       JWT_SECRET: c2ltcGxlLXN0b3JlLXNlY3JldC1rZXktZm9yLWp3dC10b2tlbnMtc2hhcmVkLWFjcm9zcy1zZXJ2aWNlcw==
+      ELASTIC_APM_SERVICE_NAME: order-service
+      ELASTIC_APM_SERVER_URL: http://apm-server:8200
+      ELASTIC_APM_APPLICATION_PACKAGES: com.simplestore
+      LOGSTASH_HOST: logstash
     depends_on:
       postgres:
         condition: service_healthy
@@ -130,6 +196,10 @@ services:
       SPRING_RABBITMQ_USERNAME: simplestore
       SPRING_RABBITMQ_PASSWORD: simplestore
       JWT_SECRET: c2ltcGxlLXN0b3JlLXNlY3JldC1rZXktZm9yLWp3dC10b2tlbnMtc2hhcmVkLWFjcm9zcy1zZXJ2aWNlcw==
+      ELASTIC_APM_SERVICE_NAME: inventory-service
+      ELASTIC_APM_SERVER_URL: http://apm-server:8200
+      ELASTIC_APM_APPLICATION_PACKAGES: com.simplestore
+      LOGSTASH_HOST: logstash
     depends_on:
       postgres:
         condition: service_healthy
@@ -147,6 +217,10 @@ services:
       SPRING_RABBITMQ_HOST: rabbitmq
       SPRING_RABBITMQ_USERNAME: simplestore
       SPRING_RABBITMQ_PASSWORD: simplestore
+      ELASTIC_APM_SERVICE_NAME: checkout-service
+      ELASTIC_APM_SERVER_URL: http://apm-server:8200
+      ELASTIC_APM_APPLICATION_PACKAGES: com.simplestore
+      LOGSTASH_HOST: logstash
     depends_on:
       postgres:
         condition: service_healthy
@@ -165,6 +239,10 @@ services:
       SPRING_RABBITMQ_USERNAME: simplestore
       SPRING_RABBITMQ_PASSWORD: simplestore
       JWT_SECRET: c2ltcGxlLXN0b3JlLXNlY3JldC1rZXktZm9yLWp3dC10b2tlbnMtc2hhcmVkLWFjcm9zcy1zZXJ2aWNlcw==
+      ELASTIC_APM_SERVICE_NAME: payment-service
+      ELASTIC_APM_SERVER_URL: http://apm-server:8200
+      ELASTIC_APM_APPLICATION_PACKAGES: com.simplestore
+      LOGSTASH_HOST: logstash
     depends_on:
       postgres:
         condition: service_healthy
@@ -177,6 +255,10 @@ services:
       - "8080:8080"
     environment:
       JWT_SECRET: c2ltcGxlLXN0b3JlLXNlY3JldC1rZXktZm9yLWp3dC10b2tlbnMtc2hhcmVkLWFjcm9zcy1zZXJ2aWNlcw==
+      ELASTIC_APM_SERVICE_NAME: gateway
+      ELASTIC_APM_SERVER_URL: http://apm-server:8200
+      ELASTIC_APM_APPLICATION_PACKAGES: com.simplestore
+      LOGSTASH_HOST: logstash
     depends_on:
       - identity-service
       - catalog-service
@@ -205,3 +287,4 @@ services:
 
 volumes:
   pgdata:
+  esdata:
