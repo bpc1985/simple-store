@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>SimpleStore - Your One-Stop Shop</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <!-- Hero Banner -->
+        <section class="hero-banner">
+            <div class="hero-content">
+                <h2 class="hero-title">Welcome to SimpleStore</h2>
+                <p class="hero-subtitle">Your one-stop shop for everything you need. Quality products at unbeatable prices.</p>
+                <a th:href="@{/products}" class="btn btn-primary btn-lg">Shop Now</a>
+            </div>
+        </section>
+
+        <!-- Featured Products -->
+        <section class="featured-section">
+            <h2 class="section-title">Featured Products</h2>
+            <div class="product-grid">
+                <div th:each="product : ${featuredProducts}" class="product-card">
+                    <div class="product-image-wrapper">
+                        <img th:src="${product.imageUrl} ?: @{/images/placeholder.png}" th:alt="${product.name}" class="product-image">
+                    </div>
+                    <div class="product-info">
+                        <h3 class="product-name" th:text="${product.name}">Product Name</h3>
+                        <p class="product-price" th:text="'$' + ${#numbers.formatDecimal(product.price, 1, 2)}">$0.00</p>
+                        <a th:href="@{/products/{id}(id=${product.id})}" class="btn btn-primary btn-sm">View</a>
+                    </div>
+                </div>
+            </div>
+            <div th:if="${featuredProducts == null or featuredProducts.isEmpty()}" class="empty-state">
+                <p>No featured products available at this time. Check back soon!</p>
+            </div>
+        </section>
+
+        <!-- Categories Sidebar -->
+        <aside class="categories-sidebar">
+            <h3 class="sidebar-title">Categories</h3>
+            <ul class="category-list">
+                <li th:each="category : ${categories}">
+                    <a th:href="@{/products(category=${category.name})}" th:text="${category.name}" class="category-link">Category</a>
+                </li>
+            </ul>
+            <div th:if="${categories == null or categories.isEmpty()}" class="empty-state">
+                <p>No categories available.</p>
+            </div>
+        </aside>
+    </div>
+</body>
+</html>

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: html(content=~{::content}, title='Order Detail')}">
+<th:block th:fragment="content">
+    <h1>Order #<span th:text="${order.id}">1</span></h1>
+    <div th:if="${message}" class="alert" th:classappend="${messageType == 'success' ? 'alert-success' : 'alert-error'}" th:text="${message}"></div>
+    <div class="order-detail" th:if="${order}">
+        <div class="detail-row"><strong>Order ID:</strong> <span th:text="${order.id}"></span></div>
+        <div class="detail-row"><strong>User ID:</strong> <span th:text="${order.userId}"></span></div>
+        <div class="detail-row"><strong>Date:</strong> <span th:text="${order.orderDate}"></span></div>
+        <div class="detail-row"><strong>Total:</strong> <span th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 2, 'POINT')}"></span></div>
+        <div class="detail-row"><strong>Status:</strong> <span class="status-badge" th:classappend="'status-' + ${order.status}" th:text="${order.status}"></span></div>
+        <div class="detail-row"><strong>Shipping:</strong> <span th:text="${order.shippingAddress}"></span></div>
+        <h3>Items</h3>
+        <table class="data-table">
+            <thead>
+                <tr><th>Product</th><th>Qty</th><th>Unit Price</th><th>Subtotal</th></tr>
+            </thead>
+            <tbody>
+                <tr th:each="item : ${order.items}">
+                    <td th:text="${item.productName}">Product</td>
+                    <td th:text="${item.quantity}">1</td>
+                    <td th:text="${#numbers.formatDecimal(item.unitPrice, 0, 'COMMA', 2, 'POINT')}">$0.00</td>
+                    <td th:text="${#numbers.formatDecimal(item.unitPrice * item.quantity, 0, 'COMMA', 2, 'POINT')}">$0.00</td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="status-actions">
+            <h3>Update Status</h3>
+            <form th:action="@{/admin/orders/{id}/status(id=${order.id})}" method="post" class="form-inline">
+                <select name="status">
+                    <option value="PENDING" th:selected="${order.status == 'PENDING'}">PENDING</option>
+                    <option value="CONFIRMED" th:selected="${order.status == 'CONFIRMED'}">CONFIRMED</option>
+                    <option value="CANCELLED" th:selected="${order.status == 'CANCELLED'}">CANCELLED</option>
+                    <option value="SHIPPED" th:selected="${order.status == 'SHIPPED'}">SHIPPED</option>
+                </select>
+                <button type="submit" class="btn btn-primary">Update</button>
+            </form>
+        </div>
+    </div>
+    <a href="/admin/orders" class="btn">← Back to Orders</a>
+</th:block>
+</html>

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title} ?: 'SimpleStore Admin'">SimpleStore Admin</title>
+    <link rel="stylesheet" th:href="@{/css/admin-style.css}">
+</head>
+<body>
+<nav class="admin-nav">
+    <div class="nav-brand">
+        <a href="/admin">🛒 SimpleStore Admin</a>
+    </div>
+    <div class="nav-user" th:if="${session.accessToken}">
+        <span th:text="${session.userEmail}">admin@store.com</span>
+        <a href="/admin/logout" class="btn-logout">Logout</a>
+    </div>
+</nav>
+<div class="admin-container">
+    <aside class="sidebar" th:if="${session.accessToken}">
+        <ul>
+            <li><a href="/admin" th:classappend="${#strings.contains(currentPath, '/admin') and !#strings.contains(currentPath, '/admin/products') and !#strings.contains(currentPath, '/admin/categories') and !#strings.contains(currentPath, '/admin/orders') and !#strings.contains(currentPath, '/admin/users') and !#strings.contains(currentPath, '/admin/inventory')} ? 'active'">📊 Dashboard</a></li>
+            <li><a href="/admin/products" th:classappend="${#strings.contains(currentPath, '/admin/products')} ? 'active'">📦 Products</a></li>
+            <li><a href="/admin/categories" th:classappend="${#strings.contains(currentPath, '/admin/categories')} ? 'active'">📁 Categories</a></li>
+            <li><a href="/admin/orders" th:classappend="${#strings.contains(currentPath, '/admin/orders')} ? 'active'">📋 Orders</a></li>
+            <li><a href="/admin/users" th:classappend="${#strings.contains(currentPath, '/admin/users')} ? 'active'">👥 Users</a></li>
+            <li><a href="/admin/inventory" th:classappend="${#strings.contains(currentPath, '/admin/inventory')} ? 'active'">🏭 Inventory</a></li>
+        </ul>
+    </aside>
+    <main class="content">
+        <th:block th:insert="~{::content}"></th:block>
+    </main>
+</div>
+</body>
+</html>

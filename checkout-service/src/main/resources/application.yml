@@ -1,0 +1,39 @@
+server.port: 8083
+spring:
+  application.name: checkout-service
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/simplestore}
+    username: ${SPRING_DATASOURCE_USERNAME:simplestore}
+    password: ${SPRING_DATASOURCE_PASSWORD:simplestore}
+  jpa:
+    hibernate.ddl-auto: update
+    show-sql: false
+    properties.hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect
+  cloud.stream:
+    function.definition: orderSubmittedConsumer;stockReservedConsumer;stockReservationFailedConsumer;paymentSucceededConsumer;paymentFailedConsumer;stockReservationCancelledConsumer
+    bindings:
+      orderSubmittedConsumer-in-0:
+        destination: order-submitted
+        group: checkout-service
+      stockReservedConsumer-in-0:
+        destination: stock-reserved
+        group: checkout-service
+      stockReservationFailedConsumer-in-0:
+        destination: stock-reservation-failed
+        group: checkout-service
+      paymentSucceededConsumer-in-0:
+        destination: payment-succeeded
+        group: checkout-service
+      paymentFailedConsumer-in-0:
+        destination: payment-failed
+        group: checkout-service
+      stockReservationCancelledConsumer-in-0:
+        destination: stock-reservation-cancelled
+        group: checkout-service
+    rabbit.bindings:
+      orderSubmittedConsumer-in-0.consumer.exchangeType: fanout
+      stockReservedConsumer-in-0.consumer.exchangeType: fanout
+      stockReservationFailedConsumer-in-0.consumer.exchangeType: fanout
+      paymentSucceededConsumer-in-0.consumer.exchangeType: fanout
+      paymentFailedConsumer-in-0.consumer.exchangeType: fanout
+      stockReservationCancelledConsumer-in-0.consumer.exchangeType: fanout

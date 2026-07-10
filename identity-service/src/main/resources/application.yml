@@ -1,0 +1,33 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: identity-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/simplestore
+    username: simplestore
+    password: simplestore
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: false
+
+jwt:
+  secret: c2ltcGxlLXN0b3JlLXNlY3JldC1rZXktdGhhdC1pcy1hdC1sZWFzdC0yNTYtYml0cy1sb25nLWZvci1obWFjLXNoYTI1Ng==
+  expiration: 900000
+  refresh-expiration: 604800000
+
+springdoc:
+  api-docs:
+    path: /api/v1/identity/api-docs
+  swagger-ui:
+    path: /api/v1/identity/swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  show-actuator: false

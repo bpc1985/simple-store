@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Shopping Cart - SimpleStore</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <h2 class="page-title">Shopping Cart</h2>
+
+        <!-- Empty Cart -->
+        <div th:if="${cart == null or cart.items == null or cart.items.isEmpty()}" class="empty-state">
+            <h3>Your cart is empty</h3>
+            <p>Looks like you haven't added anything to your cart yet.</p>
+            <a th:href="@{/products}" class="btn btn-primary">Start Shopping</a>
+        </div>
+
+        <!-- Cart Items -->
+        <div th:if="${cart != null and cart.items != null and !cart.items.isEmpty()}" class="cart-content">
+            <table class="cart-table">
+                <thead>
+                    <tr>
+                        <th>Image</th>
+                        <th>Product</th>
+                        <th>Price</th>
+                        <th>Quantity</th>
+                        <th>Subtotal</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="item : ${cart.items}" class="cart-item-row">
+                        <td class="cart-item-image">
+                            <img th:src="${item.productImageUrl} ?: @{/images/placeholder.png}"
+                                 th:alt="${item.productName}" class="cart-thumbnail">
+                        </td>
+                        <td class="cart-item-name">
+                            <a th:href="@{/products/{id}(id=${item.productId})}" th:text="${item.productName}">Product Name</a>
+                        </td>
+                        <td class="cart-item-price" th:text="'$' + ${#numbers.formatDecimal(item.price, 1, 2)}">$0.00</td>
+                        <td class="cart-item-quantity">
+                            <form th:action="@{/cart/update/{id}(id=${item.productId})}" method="post" class="quantity-form">
+                                <input type="number" name="quantity" th:value="${item.quantity}" min="1" class="quantity-input"
+                                       th:attr="data-product-id=${item.productId}">
+                                <button type="submit" class="btn btn-sm btn-outline update-qty-btn">Update</button>
+                            </form>
+                        </td>
+                        <td class="cart-item-subtotal" th:text="'$' + ${#numbers.formatDecimal(item.subtotal, 1, 2)}">$0.00</td>
+                        <td class="cart-item-remove">
+                            <form th:action="@{/cart/remove/{id}(id=${item.productId})}" method="post" class="remove-form">
+                                <button type="submit" class="btn btn-danger btn-sm remove-btn"
+                                        th:attr="data-product-id=${item.productId}">Remove</button>
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Cart Summary -->
+            <div class="cart-summary">
+                <div class="cart-summary-details">
+                    <p><strong>Items:</strong> <span th:text="${cart.totalItems}">0</span></p>
+                    <p class="cart-total"><strong>Total:</strong> <span th:text="'$' + ${#numbers.formatDecimal(cart.totalPrice, 1, 2)}">$0.00</span></p>
+                </div>
+                <div class="cart-actions">
+                    <a th:href="@{/products}" class="btn btn-outline">Continue Shopping</a>
+                    <form th:action="@{/cart/clear}" method="post" class="clear-cart-form" style="display:inline;">
+                        <button type="submit" class="btn btn-danger">Clear Cart</button>
+                    </form>
+                    <a th:href="@{/checkout}" class="btn btn-success">Proceed to Checkout</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

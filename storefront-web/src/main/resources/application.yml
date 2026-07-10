@@ -1,0 +1,12 @@
+server.port: 8080
+
+spring:
+  application:
+    name: storefront-web
+  thymeleaf:
+    cache: false
+    prefix: classpath:/templates/
+    suffix: .html
+
+gateway:
+  url: ${GATEWAY_URL:http://localhost:8080}

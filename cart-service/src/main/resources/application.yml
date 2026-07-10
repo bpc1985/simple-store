@@ -1,0 +1,28 @@
+server.port: 8081
+spring:
+  application.name: cart-service
+  data.redis:
+    host: ${SPRING_DATA_REDIS_HOST:localhost}
+    port: 6379
+  cloud.stream:
+    function.definition: productUpdatedConsumer
+    bindings:
+      productUpdatedConsumer-in-0:
+        destination: product-updated
+        group: cart-service
+    rabbit.bindings:
+      productUpdatedConsumer-in-0.consumer:
+        exchangeType: fanout
+  security.oauth2.resourceserver.jwt:
+    issuer-uri: http://identity-service:8080
+    jwk-set-uri: http://identity-service:8080/.well-known/jwks.json
+jwt.secret: ${JWT_SECRET:c2ltcGxlLXN0b3JlLXNlY3JldC1rZXktZm9yLWp3dC10b2tlbnMtc2hhcmVkLWFjcm9zcy1zZXJ2aWNlcw==}
+
+springdoc:
+  api-docs:
+    path: /api/v1/cart/api-docs
+  swagger-ui:
+    path: /api/v1/cart/swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  show-actuator: false

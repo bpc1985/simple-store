@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: html(content=~{::content}, title='Categories')}">
+<th:block th:fragment="content">
+    <div class="page-header">
+        <h1>Categories</h1>
+    </div>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="cat : ${categories}">
+                <td th:text="${cat.id}">1</td>
+                <td th:text="${cat.name}">Category</td>
+                <td th:text="${cat.description}">Description</td>
+                <td class="actions">
+                    <form th:action="@{/admin/categories/{id}/delete(id=${cat.id})}" method="post" style="display:inline" onsubmit="return confirm('Delete this category?')">
+                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</th:block>
+</html>

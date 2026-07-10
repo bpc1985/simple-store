@@ -1,0 +1,207 @@
+version: '3.9'
+
+services:
+  # ============================================
+  # Infrastructure
+  # ============================================
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: simplestore
+      POSTGRES_PASSWORD: simplestore
+      POSTGRES_DB: simplestore
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U simplestore"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:4-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: simplestore
+      RABBITMQ_DEFAULT_PASS: simplestore
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+  # ============================================
+  # Microservices
+  # ============================================
+  identity-service:
+    build: ./identity-service
+    ports:
+      - "8081:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/simplestore
+      SPRING_DATASOURCE_USERNAME: simplestore
+      SPRING_DATASOURCE_PASSWORD: simplestore
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_USERNAME: simplestore
+      SPRING_RABBITMQ_PASSWORD: simplestore
+      SPRING_REDIS_HOST: redis
+      JWT_SECRET: c2ltcGxlLXN0b3JlLXNlY3JldC1rZXktZm9yLWp3dC10b2tlbnMtc2hhcmVkLWFjcm9zcy1zZXJ2aWNlcw==
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  catalog-service:
+    build: ./catalog-service
+    ports:
+      - "8082:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/simplestore
+      SPRING_DATASOURCE_USERNAME: simplestore
+      SPRING_DATASOURCE_PASSWORD: simplestore
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_USERNAME: simplestore
+      SPRING_RABBITMQ_PASSWORD: simplestore
+      JWT_SECRET: c2ltcGxlLXN0b3JlLXNlY3JldC1rZXktZm9yLWp3dC10b2tlbnMtc2hhcmVkLWFjcm9zcy1zZXJ2aWNlcw==
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  cart-service:
+    build: ./cart-service
+    ports:
+      - "8083:8080"
+    environment:
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_USERNAME: simplestore
+      SPRING_RABBITMQ_PASSWORD: simplestore
+      JWT_SECRET: c2ltcGxlLXN0b3JlLXNlY3JldC1rZXktZm9yLWp3dC10b2tlbnMtc2hhcmVkLWFjcm9zcy1zZXJ2aWNlcw==
+    depends_on:
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  order-service:
+    build: ./order-service
+    ports:
+      - "8084:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/simplestore
+      SPRING_DATASOURCE_USERNAME: simplestore
+      SPRING_DATASOURCE_PASSWORD: simplestore
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_USERNAME: simplestore
+      SPRING_RABBITMQ_PASSWORD: simplestore
+      JWT_SECRET: c2ltcGxlLXN0b3JlLXNlY3JldC1rZXktZm9yLWp3dC10b2tlbnMtc2hhcmVkLWFjcm9zcy1zZXJ2aWNlcw==
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  inventory-service:
+    build: ./inventory-service
+    ports:
+      - "8085:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/simplestore
+      SPRING_DATASOURCE_USERNAME: simplestore
+      SPRING_DATASOURCE_PASSWORD: simplestore
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_USERNAME: simplestore
+      SPRING_RABBITMQ_PASSWORD: simplestore
+      JWT_SECRET: c2ltcGxlLXN0b3JlLXNlY3JldC1rZXktZm9yLWp3dC10b2tlbnMtc2hhcmVkLWFjcm9zcy1zZXJ2aWNlcw==
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  checkout-service:
+    build: ./checkout-service
+    ports:
+      - "8086:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/simplestore
+      SPRING_DATASOURCE_USERNAME: simplestore
+      SPRING_DATASOURCE_PASSWORD: simplestore
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_USERNAME: simplestore
+      SPRING_RABBITMQ_PASSWORD: simplestore
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  payment-service:
+    build: ./payment-service
+    ports:
+      - "8087:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/simplestore
+      SPRING_DATASOURCE_USERNAME: simplestore
+      SPRING_DATASOURCE_PASSWORD: simplestore
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_USERNAME: simplestore
+      SPRING_RABBITMQ_PASSWORD: simplestore
+      JWT_SECRET: c2ltcGxlLXN0b3JlLXNlY3JldC1rZXktZm9yLWp3dC10b2tlbnMtc2hhcmVkLWFjcm9zcy1zZXJ2aWNlcw==
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  gateway:
+    build: ./gateway
+    ports:
+      - "8080:8080"
+    environment:
+      JWT_SECRET: c2ltcGxlLXN0b3JlLXNlY3JldC1rZXktZm9yLWp3dC10b2tlbnMtc2hhcmVkLWFjcm9zcy1zZXJ2aWNlcw==
+    depends_on:
+      - identity-service
+      - catalog-service
+      - cart-service
+      - order-service
+      - inventory-service
+      - payment-service
+
+  storefront-web:
+    build: ./storefront-web
+    ports:
+      - "8090:8080"
+    environment:
+      GATEWAY_URL: http://gateway:8080
+    depends_on:
+      - gateway
+
+  admin-web:
+    build: ./admin-web
+    ports:
+      - "8091:8080"
+    environment:
+      GATEWAY_URL: http://gateway:8080
+    depends_on:
+      - gateway
+
+volumes:
+  pgdata:

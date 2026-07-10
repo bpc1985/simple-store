@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title th:text="${pageTitle} ?: 'Products'">Products</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="products-layout">
+            <!-- Sidebar Filters -->
+            <aside class="filters-sidebar">
+                <h3 class="sidebar-title">Filter by Category</h3>
+                <ul class="category-filter-list">
+                    <li>
+                        <a th:href="@{/products}" class="filter-link" th:classappend="${currentCategory == null} ? 'active'">
+                            All Products
+                        </a>
+                    </li>
+                    <li th:each="cat : ${categories}">
+                        <a th:href="@{/products(category=${cat.name})}" class="filter-link"
+                           th:classappend="${currentCategory != null and currentCategory == cat.name} ? 'active'"
+                           th:text="${cat.name}">Category</a>
+                    </li>
+                </ul>
+            </aside>
+
+            <!-- Main Content -->
+            <div class="products-main">
+                <!-- Search Bar -->
+                <form th:action="@{/products}" method="get" class="search-form">
+                    <input type="text" name="q" th:value="${searchQuery}" placeholder="Search products..." class="search-input">
+                    <button type="submit" class="btn btn-primary">Search</button>
+                </form>
+
+                <!-- Product Grid -->
+                <div class="product-grid" th:if="${products != null and !products.isEmpty()}">
+                    <div th:each="product : ${products}" class="product-card">
+                        <div class="product-image-wrapper">
+                            <img th:src="${product.imageUrl} ?: @{/images/placeholder.png}" th:alt="${product.name}" class="product-image">
+                        </div>
+                        <div class="product-info">
+                            <h3 class="product-name" th:text="${product.name}">Product Name</h3>
+                            <p class="product-price" th:text="'$' + ${#numbers.formatDecimal(product.price, 1, 2)}">$0.00</p>
+                            <a th:href="@{/products/{id}(id=${product.id})}" class="btn btn-primary btn-sm">View Details</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Empty State -->
+                <div th:unless="${products != null and !products.isEmpty()}" class="empty-state">
+                    <h3>No Products Found</h3>
+                    <p th:if="${searchQuery != null and !searchQuery.isEmpty()}">
+                        No results for "<span th:text="${searchQuery}"></span>". Try a different search term.
+                    </p>
+                    <p th:unless="${searchQuery != null and !searchQuery.isEmpty()}">
+                        No products are available in this category yet.
+                    </p>
+                    <a th:href="@{/products}" class="btn btn-primary">View All Products</a>
+                </div>
+
+                <!-- Pagination -->
+                <div class="pagination" th:if="${totalPages != null and totalPages > 1}">
+                    <a th:href="@{/products(page=${currentPage - 1}, q=${searchQuery}, category=${currentCategory})}"
+                       th:if="${currentPage > 0}" class="btn btn-outline">&laquo; Previous</a>
+                    <span class="pagination-info">
+                        Page <span th:text="${currentPage + 1}">1</span> of <span th:text="${totalPages}">1</span>
+                    </span>
+                    <a th:href="@{/products(page=${currentPage + 1}, q=${searchQuery}, category=${currentCategory})}"
+                       th:if="${currentPage < totalPages - 1}" class="btn btn-outline">Next &raquo;</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

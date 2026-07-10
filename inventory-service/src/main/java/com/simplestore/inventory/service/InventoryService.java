@@ -1,0 +1,184 @@
+package com.simplestore.inventory.service;
+
+import com.simplestore.common.dto.PagedResult;
+import com.simplestore.common.event.*;
+import com.simplestore.inventory.domain.ReservationStatus;
+import com.simplestore.inventory.domain.StockEntry;
+import com.simplestore.inventory.domain.StockReservation;
+import com.simplestore.inventory.domain.StockReservationItem;
+import com.simplestore.inventory.dto.InventoryStatsDto;
+import com.simplestore.inventory.dto.StockLevelDto;
+import com.simplestore.inventory.repository.StockEntryRepository;
+import com.simplestore.inventory.repository.StockReservationRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cloud.stream.function.StreamBridge;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Instant;
+import java.util.*;
+
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class InventoryService {
+
+    private final StockEntryRepository stockEntryRepository;
+    private final StockReservationRepository stockReservationRepository;
+    private final StreamBridge streamBridge;
+
+    public PagedResult<StockLevelDto> getStockLevels(int page, int pageSize) {
+        Page<StockEntry> entryPage = stockEntryRepository.findAll(PageRequest.of(page, pageSize));
+        List<StockLevelDto> dtos = entryPage.getContent().stream()
+                .map(e -> new StockLevelDto(e.getProductId(), e.getStockLevel()))
+                .toList();
+        PagedResult<StockLevelDto> result = new PagedResult<>();
+        result.setItems(dtos);
+        result.setPage(page);
+        result.setPageSize(pageSize);
+        result.setTotalCount(entryPage.getTotalElements());
+        return result;
+    }
+
+    public StockLevelDto getStockLevel(int productId) {
+        StockEntry entry = stockEntryRepository.findByProductId(productId)
+                .orElseThrow(() -> new RuntimeException("Stock entry not found for product: " + productId));
+        return new StockLevelDto(entry.getProductId(), entry.getStockLevel());
+    }
+
+    public long getStockCount() {
+        return stockEntryRepository.count();
+    }
+
+    @Transactional
+    public StockLevelDto updateStockLevel(int productId, int newLevel) {
+        StockEntry entry = stockEntryRepository.findByProductId(productId)
+                .orElseThrow(() -> new RuntimeException("Stock entry not found for product: " + productId));
+        entry.setStockLevel(newLevel);
+        entry.setUpdatedAt(Instant.now());
+        stockEntryRepository.save(entry);
+
+        StockLevelChangedEvent event = new StockLevelChangedEvent(
+                (long) productId, newLevel);
+        streamBridge.send("stock-level-changed", event);
+        log.info("Stock level for product {} updated to {} and StockLevelChangedEvent published", productId, newLevel);
+
+        return new StockLevelDto(entry.getProductId(), entry.getStockLevel());
+    }
+
+    public List<StockReservation> getReservations() {
+        return stockReservationRepository.findAll();
+    }
+
+    public InventoryStatsDto getInventoryStats() {
+        long totalProducts = stockEntryRepository.count();
+        long totalReservations = stockReservationRepository.count();
+        long lowStockCount = stockEntryRepository.findAll().stream()
+                .filter(e -> e.getStockLevel() < 10)
+                .count();
+        return new InventoryStatsDto(totalProducts, totalReservations, lowStockCount);
+    }
+
+
+    @Transactional
+    public void processReserveStock(ReserveStockRequestedEvent event) {
+        log.info("Processing ReserveStockRequestedEvent: correlationId={}, userId={}",
+                event.correlationId(), event.userId());
+
+        Map<Long, StockEntry> entriesToUpdate = new HashMap<>();
+
+        // Check stock availability for all items
+        for (ReserveStockRequestedEvent.StockItem item : event.items()) {
+            StockEntry entry = stockEntryRepository.findByProductId(item.productId().intValue())
+                    .orElse(null);
+
+            if (entry == null) {
+                String reason = "Product not found: " + item.productId();
+                log.warn("Stock reservation failed: {}", reason);
+                streamBridge.send("stock-reservation-failed",
+                        new StockReservationFailedEvent(event.correlationId(), event.userId(), reason));
+                return;
+            }
+
+            if (entry.getStockLevel() < item.quantity()) {
+                String reason = "Insufficient stock for product " + item.productId()
+                        + ": requested " + item.quantity() + ", available " + entry.getStockLevel();
+                log.warn("Stock reservation failed: {}", reason);
+                streamBridge.send("stock-reservation-failed",
+                        new StockReservationFailedEvent(event.correlationId(), event.userId(), reason));
+                return;
+            }
+
+            entriesToUpdate.put(item.productId(), entry);
+        }
+
+        // All items have sufficient stock — deduct and create reservation
+        StockReservation reservation = StockReservation.builder()
+                .orderId(0)
+                .correlationId(event.correlationId())
+                .status(ReservationStatus.RESERVED)
+                .createdAt(Instant.now())
+                .updatedAt(Instant.now())
+                .build();
+
+        for (ReserveStockRequestedEvent.StockItem item : event.items()) {
+            StockEntry entry = entriesToUpdate.get(item.productId());
+            entry.setStockLevel(entry.getStockLevel() - item.quantity());
+            entry.setUpdatedAt(Instant.now());
+            stockEntryRepository.save(entry);
+
+            StockReservationItem reservationItem = StockReservationItem.builder()
+                    .productId(item.productId().intValue())
+                    .quantity(item.quantity())
+                    .build();
+            reservation.addItem(reservationItem);
+        }
+
+        stockReservationRepository.save(reservation);
+
+        log.info("Stock reserved successfully for correlationId={}", event.correlationId());
+        streamBridge.send("stock-reserved",
+                new StockReservedEvent(event.correlationId(), event.userId()));
+    }
+
+    @Transactional
+    public void processCancelReservation(StockReservationCancelRequestedEvent event) {
+        log.info("Processing StockReservationCancelRequestedEvent: correlationId={}",
+                event.correlationId());
+
+        StockReservation reservation = stockReservationRepository
+                .findByCorrelationId(event.correlationId()).orElse(null);
+
+        if (reservation == null) {
+            log.warn("Reservation not found for correlationId={}", event.correlationId());
+            return;
+        }
+
+        if (reservation.getStatus() != ReservationStatus.RESERVED) {
+            log.warn("Reservation {} is not in RESERVED status, current status: {}",
+                    event.correlationId(), reservation.getStatus());
+            return;
+        }
+
+        // Restore stock for each item
+        for (StockReservationItem item : reservation.getItems()) {
+            StockEntry entry = stockEntryRepository.findByProductId(item.getProductId())
+                    .orElseThrow(() -> new RuntimeException(
+                            "Stock entry not found for product: " + item.getProductId()));
+            entry.setStockLevel(entry.getStockLevel() + item.getQuantity());
+            entry.setUpdatedAt(Instant.now());
+            stockEntryRepository.save(entry);
+        }
+
+        reservation.setStatus(ReservationStatus.CANCELLED);
+        reservation.setUpdatedAt(Instant.now());
+        stockReservationRepository.save(reservation);
+
+        log.info("Reservation cancelled for correlationId={}", event.correlationId());
+        streamBridge.send("stock-reservation-cancelled",
+                new StockReservationCancelledEvent(event.correlationId(), event.userId()));
+    }
+}

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: html(content=~{::content}, title=${product != null ? 'Edit Product' : 'Create Product'})}">
+<th:block th:fragment="content">
+    <h1 th:text="${product != null ? 'Edit Product' : 'Create Product'}">Create Product</h1>
+    <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+    <form method="post" class="form">
+        <div class="form-group">
+            <label for="name">Name *</label>
+            <input type="text" id="name" name="name" th:value="${product?.name}" required>
+        </div>
+        <div class="form-group">
+            <label for="description">Description</label>
+            <textarea id="description" name="description" rows="3" th:text="${product?.description}"></textarea>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="price">Price *</label>
+                <input type="number" id="price" name="price" step="0.01" th:value="${product?.price}" required>
+            </div>
+            <div class="form-group">
+                <label for="stock">Stock *</label>
+                <input type="number" id="stock" name="stock" th:value="${product?.stock}" required>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="imageUrl">Image URL</label>
+            <input type="text" id="imageUrl" name="imageUrl" th:value="${product?.imageUrl}">
+        </div>
+        <div class="form-group">
+            <label for="categoryId">Category *</label>
+            <select id="categoryId" name="categoryId" required>
+                <option value="">Select category...</option>
+                <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.name}" th:selected="${product?.categoryId == cat.id}"></option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary" th:text="${product != null ? 'Update' : 'Create'}">Create</button>
+        <a href="/admin/products" class="btn">Cancel</a>
+    </form>
+</th:block>
+</html>

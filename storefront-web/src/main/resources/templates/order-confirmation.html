@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Order Confirmed - SimpleStore</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="order-confirmation" th:if="${order != null}">
+            <div class="confirmation-header">
+                <h2 class="confirmation-title">🎉 Thank you for your order!</h2>
+                <p class="confirmation-message">Your order has been placed successfully. Here are your order details:</p>
+            </div>
+
+            <div class="order-details-card">
+                <div class="order-info-grid">
+                    <div class="order-info-item">
+                        <span class="order-info-label">Order ID</span>
+                        <span class="order-info-value" th:text="${order.id}">#12345</span>
+                    </div>
+                    <div class="order-info-item">
+                        <span class="order-info-label">Date</span>
+                        <span class="order-info-value" th:text="${#temporals.format(order.orderDate, 'MMM dd, yyyy HH:mm')}">Jan 01, 2024</span>
+                    </div>
+                    <div class="order-info-item">
+                        <span class="order-info-label">Status</span>
+                        <span class="order-info-value order-status" th:text="${order.status}">Confirmed</span>
+                    </div>
+                    <div class="order-info-item">
+                        <span class="order-info-label">Total</span>
+                        <span class="order-info-value order-total" th:text="'$' + ${#numbers.formatDecimal(order.totalAmount, 1, 2)}">$0.00</span>
+                    </div>
+                    <div class="order-info-item">
+                        <span class="order-info-label">Shipping Address</span>
+                        <span class="order-info-value" th:text="${order.shippingAddress}">123 Main St</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="order-items-section">
+                <h3>Items Ordered</h3>
+                <table class="order-items-table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Quantity</th>
+                            <th>Price</th>
+                            <th>Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="item : ${order.items}">
+                            <td th:text="${item.productName}">Product Name</td>
+                            <td th:text="${item.quantity}">1</td>
+                            <td th:text="'$' + ${#numbers.formatDecimal(item.price, 1, 2)}">$0.00</td>
+                            <td th:text="'$' + ${#numbers.formatDecimal(item.subtotal, 1, 2)}">$0.00</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="confirmation-actions">
+                <a th:href="@{/products}" class="btn btn-primary btn-lg">Continue Shopping</a>
+                <a th:href="@{/account/orders}" class="btn btn-outline">View All Orders</a>
+            </div>
+        </div>
+
+        <div th:unless="${order != null}" class="empty-state">
+            <h3>Order Not Found</h3>
+            <p>We couldn't find this order. Please check your order history.</p>
+            <a th:href="@{/account/orders}" class="btn btn-primary">View My Orders</a>
+        </div>
+    </div>
+</body>
+</html>
