@@ -54,12 +54,14 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.ok("Token refreshed", tokens));
     }
 
+    @Operation(summary = "Logout", description = "Revokes the provided refresh token")
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<Void>> logout(@Valid @RequestBody RefreshRequest request) {
         identityService.logout(request.getRefreshToken());
         return ResponseEntity.ok(ApiResponse.ok("Logged out", null));
     }
 
+    @Operation(summary = "Get current user", description = "Returns the authenticated user's profile info")
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<UserDto>> me(Principal principal) {
         UserDto user = identityService.getUserInfo(principal.getName());

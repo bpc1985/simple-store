@@ -26,6 +26,8 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/v1/inventory/swagger-ui.html", "/api/v1/inventory/swagger-ui/**",
+                                 "/api/v1/inventory/api-docs", "/api/v1/inventory/api-docs/**").permitAll()
                 .requestMatchers("/api/v1/inventory/**").authenticated()
                 .anyRequest().authenticated()
             )

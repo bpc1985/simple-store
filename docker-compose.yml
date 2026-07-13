@@ -145,6 +145,7 @@ services:
     ports:
       - "8083:8080"
     environment:
+      SERVER_PORT: 8080
       SPRING_DATA_REDIS_HOST: redis
       SPRING_RABBITMQ_HOST: rabbitmq
       SPRING_RABBITMQ_USERNAME: simplestore
@@ -165,6 +166,7 @@ services:
     ports:
       - "8084:8080"
     environment:
+      SERVER_PORT: 8080
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/simplestore
       SPRING_DATASOURCE_USERNAME: simplestore
       SPRING_DATASOURCE_PASSWORD: simplestore

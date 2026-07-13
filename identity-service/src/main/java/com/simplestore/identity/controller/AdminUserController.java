@@ -4,6 +4,7 @@ import com.simplestore.common.dto.ApiResponse;
 import com.simplestore.common.dto.PagedResult;
 import com.simplestore.identity.dto.UserDto;
 import com.simplestore.identity.service.IdentityService;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -30,6 +31,7 @@ public class AdminUserController {
         this.identityService = identityService;
     }
 
+    @Operation(summary = "List users", description = "Returns paginated list of all registered users")
     @GetMapping("/users")
     public ResponseEntity<ApiResponse<PagedResult<UserDto>>> getUsers(
             @RequestParam(defaultValue = "0") int page,
@@ -38,12 +40,14 @@ public class AdminUserController {
         return ResponseEntity.ok(ApiResponse.ok(users));
     }
 
+    @Operation(summary = "Count users", description = "Returns total number of registered users")
     @GetMapping("/users/count")
     public ResponseEntity<ApiResponse<Map<String, Long>>> getUserCount() {
         PagedResult<UserDto> users = identityService.getUsers(0, 1);
         return ResponseEntity.ok(ApiResponse.ok(Map.of("count", users.getTotalCount())));
     }
 
+    @Operation(summary = "Update user", description = "Updates a user's full name")
     @PutMapping("/users/{id}")
     public ResponseEntity<ApiResponse<UserDto>> updateUser(
             @PathVariable String id,
@@ -53,12 +57,14 @@ public class AdminUserController {
         return ResponseEntity.ok(ApiResponse.ok("User updated", user));
     }
 
+    @Operation(summary = "Lock user", description = "Locks a user account, preventing login")
     @PostMapping("/users/{id}/lock")
     public ResponseEntity<ApiResponse<Void>> lockUser(@PathVariable String id) {
         identityService.lockUser(id);
         return ResponseEntity.ok(ApiResponse.ok("User locked", null));
     }
 
+    @Operation(summary = "Unlock user", description = "Unlocks a previously locked user account")
     @PostMapping("/users/{id}/unlock")
     public ResponseEntity<ApiResponse<Void>> unlockUser(@PathVariable String id) {
         identityService.unlockUser(id);

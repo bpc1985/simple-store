@@ -37,6 +37,7 @@ public class PaymentController {
         return ApiResponse.ok(account);
     }
 
+    @Operation(summary = "List transactions", description = "Returns paginated list of all payment transactions (admin only)")
     @GetMapping("/transactions")
     public ApiResponse<PagedResult<PaymentTransaction>> getTransactions(
             @RequestParam(defaultValue = "0") int page,

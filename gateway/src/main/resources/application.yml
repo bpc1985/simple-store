@@ -40,6 +40,23 @@ spring:
     jwk-set-uri: http://identity-service:8080/.well-known/jwks.json
 jwt.secret: ${JWT_SECRET:c2ltcGxlLXN0b3JlLXNlY3JldC1rZXktZm9yLWp3dC10b2tlbnMtc2hhcmVkLWFjcm9zcy1zZXJ2aWNlcw==}
 
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    urls:
+      - name: identity
+        url: /api/v1/identity/api-docs
+      - name: catalog
+        url: /api/v1/catalog/api-docs
+      - name: cart
+        url: /api/v1/cart/api-docs
+      - name: order
+        url: /api/v1/order/api-docs
+      - name: inventory
+        url: /api/v1/inventory/api-docs
+      - name: payment
+        url: /api/v1/payment/api-docs
+
 
 logstash.host: ${LOGSTASH_HOST:localhost}
 

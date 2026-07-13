@@ -35,6 +35,7 @@ public class CatalogController {
         return ResponseEntity.ok(ApiResponse.ok(catalogService.getProducts(page, pageSize, categoryId, search)));
     }
 
+    @Operation(summary = "Count products", description = "Returns total number of products in catalog")
     @GetMapping("/products/count")
     public ResponseEntity<ApiResponse<Long>> getProductCount() {
         return ResponseEntity.ok(ApiResponse.ok(catalogService.getProductCount()));
@@ -53,6 +54,7 @@ public class CatalogController {
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok("Product created", product));
     }
 
+    @Operation(summary = "Update product", description = "Updates an existing product's details (admin only)")
     @PutMapping("/products/{id}")
     public ResponseEntity<ApiResponse<Void>> updateProduct(@PathVariable Long id, @RequestBody UpdateProductRequest request) {
         boolean updated = catalogService.updateProduct(id, request);
@@ -60,6 +62,7 @@ public class CatalogController {
         return ResponseEntity.ok(ApiResponse.ok("Product updated", null));
     }
 
+    @Operation(summary = "Delete product", description = "Deletes a product by ID (admin only)")
     @DeleteMapping("/products/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteProduct(@PathVariable Long id) {
         boolean deleted = catalogService.deleteProduct(id);
@@ -69,6 +72,7 @@ public class CatalogController {
 
     // ── Categories ─────────────────────────────────────────────────────────────
 
+    @Operation(summary = "List categories", description = "Returns paginated list of all categories")
     @GetMapping("/categories")
     public ResponseEntity<ApiResponse<PagedResult<CategoryDto>>> getCategories(
             @RequestParam(defaultValue = "0") int page,
@@ -76,22 +80,26 @@ public class CatalogController {
         return ResponseEntity.ok(ApiResponse.ok(catalogService.getCategories(page, pageSize)));
     }
 
+    @Operation(summary = "Count categories", description = "Returns total number of categories")
     @GetMapping("/categories/count")
     public ResponseEntity<ApiResponse<Long>> getCategoryCount() {
         return ResponseEntity.ok(ApiResponse.ok(catalogService.getCategoryCount()));
     }
 
+    @Operation(summary = "Get category", description = "Returns a single category by ID")
     @GetMapping("/categories/{id}")
     public ResponseEntity<ApiResponse<CategoryDto>> getCategoryById(@PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.ok(catalogService.getCategoryById(id)));
     }
 
+    @Operation(summary = "Create category", description = "Creates a new product category (admin only)")
     @PostMapping("/categories")
     public ResponseEntity<ApiResponse<CategoryDto>> createCategory(@RequestBody CategoryDto dto) {
         CategoryDto category = catalogService.createCategory(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok("Category created", category));
     }
 
+    @Operation(summary = "Update category", description = "Updates an existing category's details (admin only)")
     @PutMapping("/categories/{id}")
     public ResponseEntity<ApiResponse<Void>> updateCategory(@PathVariable Long id, @RequestBody CategoryDto dto) {
         boolean updated = catalogService.updateCategory(id, dto);
@@ -99,6 +107,7 @@ public class CatalogController {
         return ResponseEntity.ok(ApiResponse.ok("Category updated", null));
     }
 
+    @Operation(summary = "Delete category", description = "Deletes a category by ID (admin only, fails if category has products)")
     @DeleteMapping("/categories/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteCategory(@PathVariable Long id) {
         CatalogService.DeleteCategoryResult result = catalogService.deleteCategory(id);

@@ -33,16 +33,19 @@ public class InventoryController {
         return ResponseEntity.ok(ApiResponse.ok(inventoryService.getStockLevels(page, pageSize)));
     }
 
+    @Operation(summary = "Count stock entries", description = "Returns total number of products tracked in inventory")
     @GetMapping("/stock-levels/count")
     public ResponseEntity<ApiResponse<Long>> getStockCount() {
         return ResponseEntity.ok(ApiResponse.ok(inventoryService.getStockCount()));
     }
 
+    @Operation(summary = "Get stock level", description = "Returns the current stock level for a specific product")
     @GetMapping("/stock-levels/{productId}")
     public ResponseEntity<ApiResponse<StockLevelDto>> getStockLevel(@PathVariable int productId) {
         return ResponseEntity.ok(ApiResponse.ok(inventoryService.getStockLevel(productId)));
     }
 
+    @Operation(summary = "Update stock level", description = "Manually updates stock level for a product (admin only)")
     @PutMapping("/stock-levels/{productId}")
     public ResponseEntity<ApiResponse<StockLevelDto>> updateStockLevel(
             @PathVariable int productId,
@@ -51,11 +54,13 @@ public class InventoryController {
                 "Stock level updated", inventoryService.updateStockLevel(productId, request.stockLevel())));
     }
 
+    @Operation(summary = "List reservations", description = "Returns all stock reservations (admin only)")
     @GetMapping("/reservations")
     public ResponseEntity<ApiResponse<List<StockReservation>>> getReservations() {
         return ResponseEntity.ok(ApiResponse.ok(inventoryService.getReservations()));
     }
 
+    @Operation(summary = "Get inventory stats", description = "Returns aggregate inventory statistics (admin only)")
     @GetMapping("/stats")
     public ResponseEntity<ApiResponse<InventoryStatsDto>> getStats() {
         return ResponseEntity.ok(ApiResponse.ok(inventoryService.getInventoryStats()));

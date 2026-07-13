@@ -18,6 +18,11 @@ public class SecurityConfig {
             .csrf(ServerHttpSecurity.CsrfSpec::disable)
             .securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
             .authorizeExchange(exchanges -> exchanges
+                // Swagger / OpenAPI docs - public
+                .pathMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                .pathMatchers("/webjars/**").permitAll()
+                .pathMatchers("/api/v1/*/swagger-ui.html", "/api/v1/*/swagger-ui/**").permitAll()
+                .pathMatchers("/api/v1/*/api-docs", "/api/v1/*/api-docs/**").permitAll()
                 // Public endpoints - no authentication required
                 .pathMatchers("/api/v1/identity/register").permitAll()
                 .pathMatchers("/api/v1/identity/login").permitAll()

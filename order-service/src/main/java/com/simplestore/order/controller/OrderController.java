@@ -37,6 +37,7 @@ public class OrderController {
         return ResponseEntity.ok(ApiResponse.ok(orderService.getMyOrders(userId)));
     }
 
+    @Operation(summary = "Get my order", description = "Returns a specific order belonging to the authenticated user")
     @GetMapping("/orders/{id}")
     public ResponseEntity<ApiResponse<OrderDto>> getMyOrderById(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id) {
         String userId = getUserId(jwt);
@@ -54,6 +55,7 @@ public class OrderController {
 
     // ── Admin endpoints ─────────────────────────────────────────────────────
 
+    @Operation(summary = "List all orders", description = "Returns paginated list of all orders (admin only)")
     @GetMapping("/admin/orders")
     public ResponseEntity<ApiResponse<PagedResult<OrderDto>>> getOrders(
             @RequestParam(defaultValue = "0") int page,
@@ -61,16 +63,19 @@ public class OrderController {
         return ResponseEntity.ok(ApiResponse.ok(orderService.getOrders(page, pageSize)));
     }
 
+    @Operation(summary = "Count orders", description = "Returns total number of orders (admin only)")
     @GetMapping("/admin/orders/count")
     public ResponseEntity<ApiResponse<Long>> getOrderCount() {
         return ResponseEntity.ok(ApiResponse.ok(orderService.getOrderCount()));
     }
 
+    @Operation(summary = "Get order by ID", description = "Returns a single order by its ID (admin only)")
     @GetMapping("/admin/orders/{id}")
     public ResponseEntity<ApiResponse<OrderDto>> getOrderById(@PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.ok(orderService.getOrderById(id)));
     }
 
+    @Operation(summary = "Update order status", description = "Updates the status of an order (admin only)")
     @PatchMapping("/admin/orders/{id}/status")
     public ResponseEntity<ApiResponse<Void>> updateStatus(@PathVariable Long id,
                                                            @RequestBody UpdateOrderStatusRequest request) {
@@ -79,11 +84,13 @@ public class OrderController {
         return ResponseEntity.ok(ApiResponse.ok("Order status updated", null));
     }
 
+    @Operation(summary = "Get order stats", description = "Returns aggregate order statistics (admin only)")
     @GetMapping("/admin/orders/stats")
     public ResponseEntity<ApiResponse<OrderStatsDto>> getStats() {
         return ResponseEntity.ok(ApiResponse.ok(orderService.getStats()));
     }
 
+    @Operation(summary = "Get order counts by user", description = "Returns order counts grouped by user ID (admin only)")
     @GetMapping("/admin/orders/counts-by-user")
     public ResponseEntity<ApiResponse<Map<String, Long>>> getOrderCountsByUser() {
         return ResponseEntity.ok(ApiResponse.ok(orderService.getOrderCountsByUser()));

@@ -40,7 +40,7 @@ public class IdentityService implements UserDetailsService {
 
     public IdentityService(UserRepository userRepository,
                            RefreshTokenRepository refreshTokenRepository,
-                           PasswordEncoder passwordEncoder,
+                           @Lazy PasswordEncoder passwordEncoder,
                            @Lazy AuthenticationManager authenticationManager,
                            JwtService jwtService) {
         this.userRepository = userRepository;

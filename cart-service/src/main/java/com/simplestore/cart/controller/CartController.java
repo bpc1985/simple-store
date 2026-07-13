@@ -58,6 +58,7 @@ public class CartController {
         return ResponseEntity.ok(ApiResponse.ok("Item added to cart", cart));
     }
 
+    @Operation(summary = "Update item quantity", description = "Updates the quantity of an item in the cart")
     @PutMapping("/items/{productId}")
     public ResponseEntity<ApiResponse<Cart>> updateItemQuantity(
             @RequestHeader Map<String, String> headers,
@@ -69,6 +70,7 @@ public class CartController {
         return ResponseEntity.ok(ApiResponse.ok("Item quantity updated", cart));
     }
 
+    @Operation(summary = "Remove item", description = "Removes an item from the cart")
     @DeleteMapping("/items/{productId}")
     public ResponseEntity<ApiResponse<Cart>> removeItem(
             @RequestHeader Map<String, String> headers,
@@ -78,6 +80,7 @@ public class CartController {
         return ResponseEntity.ok(ApiResponse.ok("Item removed from cart", cart));
     }
 
+    @Operation(summary = "Clear cart", description = "Removes all items from the cart")
     @DeleteMapping
     public ResponseEntity<ApiResponse<Void>> clearCart(@RequestHeader Map<String, String> headers) {
         String owner = resolveOwner(headers, null);
@@ -85,18 +88,21 @@ public class CartController {
         return ResponseEntity.ok(ApiResponse.ok("Cart cleared", null));
     }
 
+    @Operation(summary = "Count cart items", description = "Returns the number of distinct items in the cart")
     @GetMapping("/count")
     public ResponseEntity<ApiResponse<Integer>> getCartCount(@RequestHeader Map<String, String> headers) {
         String owner = resolveOwner(headers, null);
         return ResponseEntity.ok(ApiResponse.ok(cartService.getCartCount(owner)));
     }
 
+    @Operation(summary = "Get cart total", description = "Returns the total price of all items in the cart")
     @GetMapping("/total")
     public ResponseEntity<ApiResponse<BigDecimal>> getCartTotal(@RequestHeader Map<String, String> headers) {
         String owner = resolveOwner(headers, null);
         return ResponseEntity.ok(ApiResponse.ok(cartService.getCartTotal(owner)));
     }
 
+    @Operation(summary = "Merge carts", description = "Merges an anonymous cart into the authenticated user's cart")
     @PostMapping("/merge")
     public ResponseEntity<ApiResponse<Void>> mergeCart(
             @RequestHeader Map<String, String> headers,
