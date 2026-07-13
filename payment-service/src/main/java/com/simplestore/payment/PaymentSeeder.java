@@ -25,24 +25,29 @@ public class PaymentSeeder implements CommandLineRunner {
 
         log.info("Seeding payment accounts...");
 
+        // Well-known UUIDs matching IdentitySeeder
+        String adminId = "00000000-0000-0000-0000-000000000001";
+        String user1Id = "00000000-0000-0000-0000-000000000002";
+        String user2Id = "00000000-0000-0000-0000-000000000003";
+
+        PaymentAccount admin = PaymentAccount.builder()
+                .userId(adminId)
+                .balance(new BigDecimal("10000.00"))
+                .build();
+        paymentAccountRepository.save(admin);
+
         PaymentAccount user1 = PaymentAccount.builder()
-                .userId("user1")
+                .userId(user1Id)
                 .balance(new BigDecimal("5000.00"))
                 .build();
         paymentAccountRepository.save(user1);
 
         PaymentAccount user2 = PaymentAccount.builder()
-                .userId("user2")
+                .userId(user2Id)
                 .balance(new BigDecimal("3000.00"))
                 .build();
         paymentAccountRepository.save(user2);
 
-        PaymentAccount admin = PaymentAccount.builder()
-                .userId("admin")
-                .balance(new BigDecimal("10000.00"))
-                .build();
-        paymentAccountRepository.save(admin);
-
-        log.info("Seeded 3 payment accounts: user1=5000.00, user2=3000.00, admin=10000.00");
+        log.info("Seeded 3 payment accounts: admin=10000.00, user1=5000.00, user2=3000.00");
     }
 }
