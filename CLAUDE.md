@@ -14,22 +14,22 @@ All Maven commands run from repo root.
 # Build every module (parent pom drives the reactor)
 mvn clean install -DskipTests
 
-# Build a single module (builds common + that module only)
+# Build a single module (+ its dependency, common)
 mvn -pl catalog-service -am clean install -DskipTests
 
 # Run a service locally against Dockerized infra (infra must be up first)
-docker-compose up -d postgres redis rabbitmq
+docker compose up -d postgres redis rabbitmq
 mvn -pl <module> spring-boot:run        # e.g. catalog-service
 
-# Run everything via Docker (build JARs first, then compose)
+# Run everything via Docker
 mvn clean install -DskipTests
-docker-compose up -d
-docker-compose ps                       # status
-docker-compose logs -f <service>        # tail one service
-docker-compose down -v                  # stop + wipe volumes (resets DBs)
+docker compose up --build -d             # --build is REQUIRED to pick up new JARs
+docker compose ps                        # status
+docker compose logs -f <service>         # tail one service
+docker compose down -v                   # stop + wipe volumes (resets DBs)
 
 # Reset a flaky environment
-docker-compose down -v && docker-compose up -d
+docker compose down -v && docker compose up --build -d
 ```
 
 ### Running single modules
@@ -113,11 +113,19 @@ Invariants when editing the orchestrator:
 
 ### Event bus — Spring Cloud Stream + RabbitMQ
 
-Events are Java records in `common/src/main/java/com/simplestore/common/event/` (note: a duplicate `events/` package exists — use `event/`, the singular form, which the code imports). Publishers use `StreamBridge.send("binding-name", event)`; consumers expose `@Bean Consumer<Event>` and declare them in `spring.cloud.stream.function.definition`.
+Events are Java records in `common/src/main/java/com/simplestore/common/event/` (the singular form — a duplicate `events/` package existed but has been removed). Publishers use `StreamBridge.send("binding-name", event)`; consumers are `@Component` beans implementing `Consumer<EventType>` directly. Spring Cloud Stream function definitions declare them in each service's `application.yml` under `spring.cloud.stream.function.definition`.
 
-Binding-name → RabbitMQ destination mapping lives in each service's `application.yml` under `spring.cloud.stream.bindings.<bean>-in-0.destination`. Exchanges are `fanout`. Consumer groups (e.g. `group: checkout-service`) give durable subscriptions. The full event list and publishers/consumers are in the README "Events" table.
+Binding-name → RabbitMQ destination mapping lives in each service's `application.yml` under `spring.cloud.stream.bindings.<name>-in-0.destination`. Exchanges are `fanout`. Consumer groups (e.g. `group: checkout-service`) give durable subscriptions. The full event list and publishers/consumers are in the README "Events" table.
 
-When adding an event: define the record in `common/event/`, add a binding in both publisher's and consumer's yml, register the `Consumer` bean. Do not inline event classes in a service — `common` is the contract.
+When adding an event: define the record in `common/event/`, add a binding in both publisher's and consumer's yml, create the `@Component Consumer<Event>` class. Do not inline event classes in a service — `common` is the contract.
+
+**Consumer patterns:**
+- **Single-event consumers** (most services): the class `implements Consumer<EventType>` directly. The `@Component` class IS the consumer bean — no `@Bean` method needed. Example: `CancelReservationConsumer implements Consumer<StockReservationCancelRequestedEvent>`.
+- **Multi-event consumers** (checkout only): one `@Component` class with multiple `@Bean` methods, each returning a `Consumer<EventType>`. The `@Bean` method names must differ from the class bean name to avoid collisions. Example: `CheckoutConsumer` has methods `orderSubmittedConsumer()`, `stockReservedConsumer()`, etc.
+
+### Identity-service circular dependency
+
+`SecurityConfig` injects `IdentityService` (as `UserDetailsService`), and `IdentityService` injects `AuthenticationManager` (defined as a `@Bean` in `SecurityConfig`). Cycle: `SecurityConfig → IdentityService → AuthenticationManager → SecurityConfig`. Fixed with `@Lazy` on `AuthenticationManager` in `IdentityService`'s constructor — the proxy defers resolution until `login()` is called.
 
 ### Inventory — CQRS-lite
 
@@ -136,8 +144,44 @@ Every service has `logstash-logback-encoder` (JSON logs → Logstash TCP :5000 �
 ## Conventions
 
 - Package root: `com.simplestore.<service>` (e.g. `com.simplestore.catalog`). Subpackages: `config`, `controller`, `service`, `model` or `domain`, `dto`, `repository`, `consumer` (when messaging).
-- Entities use Lombok (`@Data`/`@Builder`/`@NoArgsConstructor`) + JPA. DTOs are Lombok builders. Events are Java records.
+- Entities use Lombok (`@Data`/`@Builder`/`@NoArgsConstructor`) + JPA. DTOs are Lombok builders. **Events are Java records** — no Lombok.
 - JPA repositories extend `JpaRepository`. No custom query DSL.
 - `common` module is a dependency of every service — shared DTOs (`ApiResponse`, `PagedResult`), events, and OpenAPI config. Never duplicate an event schema across services.
 - File naming: Java PascalCase for classes; service modules are kebab-case dirs (`catalog-service`).
 - When adding a new service: add it to the parent `pom.xml` `<modules>`, give it a `Dockerfile` (copy the existing `eclipse-temurin:21-jre-alpine` 5-liner), wire it into `docker-compose.yml` with the same env block pattern (datasource/rabbit/JWT_SECRET/APM/LOGSTASH), and add a gateway route if it needs HTTP exposure.
+
+## Gotchas & Known Issues
+
+### Docker: always use `--build` after Maven
+
+`docker compose up` without `--build` reuses cached images even when JARs changed. After any `mvn clean install`, use `docker compose up --build -d`. The full safe sequence:
+
+```bash
+mvn clean install -DskipTests
+docker compose down
+docker compose up --build -d
+```
+
+### Java 26 + Lombok sun.misc.Unsafe warnings
+
+Project targets Java 21. Java 26 produces these warnings from Lombok 1.18.46:
+```
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by lombok.permit.Permit
+```
+Harmless. No Lombok upgrade available (1.18.46 is latest). Resolves when Lombok releases Java 26-compatible version, or use Java 21 JDK.
+
+### Logstash port 5001 (not 5000)
+
+Host port is 5001, not the default 5000. macOS AirPlay Receiver binds port 5000. docker-compose.yml maps `5001:5000` — Logstash listens on container port 5000, exposed on host 5001. All services connect via Docker network DNS (`logstash:5000`), so no code config changed.
+
+### docker-compose.yml version field
+
+The `version: '3.9'` line triggers a deprecation warning. Can be removed — Docker Compose v2 ignores it.
+
+### Consumer bean naming collision
+
+A class annotated `@Component` with a `@Bean` method whose name matches the default class bean name causes "A bean with that name has already been defined". Solution: either implement `Consumer<T>` directly (no `@Bean` method), or ensure `@Bean` method names differ from the class-derived bean name (checkout pattern).
+
+### Port collisions between services
+
+checkout-service `application.yml` sets `server.port: 8083` locally, same as cart-service. In Docker this is fine (container ports mapped to different host ports). When running locally, start only one of them or override the port.

@@ -9,6 +9,7 @@ import com.simplestore.identity.model.ApplicationUser;
 import com.simplestore.identity.model.RefreshToken;
 import com.simplestore.identity.repository.RefreshTokenRepository;
 import com.simplestore.identity.repository.UserRepository;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -40,7 +41,7 @@ public class IdentityService implements UserDetailsService {
     public IdentityService(UserRepository userRepository,
                            RefreshTokenRepository refreshTokenRepository,
                            PasswordEncoder passwordEncoder,
-                           AuthenticationManager authenticationManager,
+                           @Lazy AuthenticationManager authenticationManager,
                            JwtService jwtService) {
         this.userRepository = userRepository;
         this.refreshTokenRepository = refreshTokenRepository;

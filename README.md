@@ -102,7 +102,8 @@ cd simple-store
 mvn clean install -DskipTests
 
 # 2. Start infrastructure + all 10 services
-docker-compose up -d
+# IMPORTANT: --build is REQUIRED to pick up new JARs after any mvn install
+docker-compose up --build -d
 
 # 3. Wait ~30 seconds for services to be ready, then check status
 docker-compose ps
@@ -138,6 +139,9 @@ docker-compose logs -f catalog-service   # single service
 ```bash
 docker-compose down          # stop containers
 docker-compose down -v       # stop + delete volumes (reset data)
+
+# Full reset + rebuild (after code changes)
+docker-compose down -v && docker-compose up --build -d
 ```
 
 ---
@@ -237,11 +241,16 @@ curl http://localhost:8080/api/v1/cart \
 | Problem | Fix |
 |---------|-----|
 | Port already in use | `lsof -i :8080` to find the process, then kill it |
-| Docker containers won't start | `docker-compose down -v && docker-compose up -d` (full reset) |
+| Port 5000 already in use (macOS) | macOS AirPlay Receiver uses port 5000. Logstash mapped to host port 5001 instead. Disable AirPlay Receiver in System Settings if you need 5000. |
+| Docker containers won't start | `docker-compose down -v && docker-compose up --build -d` (full reset) |
 | Services can't connect to DB | Check `docker-compose ps` — ensure `postgres` is `healthy` |
 | Build fails | `mvn clean install -DskipTests -U` (clean + force update snapshots) |
 | Lombok errors | Ensure you're using Java 21+ and Lombok 1.18.46+ |
 | RabbitMQ connection refused | Wait 10s after RabbitMQ starts — it takes time to initialize |
+| Stale Docker images (code changes not reflected) | Always use `docker-compose up --build -d` after `mvn clean install`. Without `--build`, Docker reuses cached images with old JARs. |
+| `sun.misc.Unsafe` warnings on Java 23+ | Lombok compatibility warning on newer JDKs. Harmless — no fix available yet. Use Java 21 to eliminate. |
+| Bean definition override errors | Duplicate bean names. Check for `@Component` + `@Bean` method with same name in consumer classes. Implement `Consumer<T>` directly instead. |
+| Circular dependency in identity-service | `SecurityConfig ↔ IdentityService` cycle fixed with `@Lazy` on `AuthenticationManager`. If adding new injections, watch for cycles. |
 
 ## Default Users
 
