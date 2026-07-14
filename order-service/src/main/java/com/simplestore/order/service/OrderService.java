@@ -30,7 +30,10 @@ public class OrderService {
     @Transactional
     public OrderDto createOrder(String userId, CreateOrderRequest request) {
         BigDecimal total = request.items().stream()
-                .map(i -> i.unitPrice().multiply(BigDecimal.valueOf(i.quantity())))
+                .map(i -> {
+                    BigDecimal price = i.unitPrice() != null ? i.unitPrice() : BigDecimal.ZERO;
+                    return price.multiply(BigDecimal.valueOf(i.quantity()));
+                })
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         Order order = Order.builder()
@@ -43,9 +46,9 @@ public class OrderService {
         for (var item : request.items()) {
             OrderItem orderItem = OrderItem.builder()
                     .productId(item.productId())
-                    .productName(item.productName())
+                    .productName(item.productName() != null ? item.productName() : "Product #" + item.productId())
                     .quantity(item.quantity())
-                    .unitPrice(item.unitPrice())
+                    .unitPrice(item.unitPrice() != null ? item.unitPrice() : BigDecimal.ZERO)
                     .build();
             order.addItem(orderItem);
         }
@@ -84,6 +87,22 @@ public class OrderService {
         if (!order.getUserId().equals(userId)) {
             throw new RuntimeException("Access denied");
         }
+        return toOrderDto(order);
+    }
+
+    @Transactional
+    public OrderDto cancelOrder(Long id, String userId) {
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Order not found: " + id));
+        if (!order.getUserId().equals(userId)) {
+            throw new RuntimeException("Access denied");
+        }
+        if (order.getStatus() != OrderStatus.PENDING) {
+            throw new RuntimeException("Only pending orders can be cancelled");
+        }
+        order.setStatus(OrderStatus.CANCELLED);
+        orderRepository.save(order);
+        log.info("Order {} cancelled by user {}", id, userId);
         return toOrderDto(order);
     }
 

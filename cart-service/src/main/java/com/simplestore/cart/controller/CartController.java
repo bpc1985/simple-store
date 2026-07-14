@@ -49,8 +49,8 @@ public class CartController {
             @RequestBody Map<String, Object> body) {
         String owner = resolveOwner(headers, null);
         Long productId = ((Number) body.get("productId")).longValue();
-        String productName = (String) body.get("productName");
-        BigDecimal price = new BigDecimal(body.get("price").toString());
+        String productName = (String) body.getOrDefault("productName", "Product #" + productId);
+        BigDecimal price = new BigDecimal(body.getOrDefault("price", 0).toString());
         String imageUrl = (String) body.getOrDefault("imageUrl", null);
         int quantity = ((Number) body.getOrDefault("quantity", 1)).intValue();
 

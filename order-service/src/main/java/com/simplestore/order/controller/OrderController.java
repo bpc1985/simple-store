@@ -53,6 +53,15 @@ public class OrderController {
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok("Order created", order));
     }
 
+    @Operation(summary = "Cancel my order", description = "Cancels a pending order (user only)")
+    @PostMapping("/orders/{id}/cancel")
+    public ResponseEntity<ApiResponse<OrderDto>> cancelMyOrder(@AuthenticationPrincipal Jwt jwt,
+                                                                @PathVariable Long id) {
+        String userId = getUserId(jwt);
+        OrderDto order = orderService.cancelOrder(id, userId);
+        return ResponseEntity.ok(ApiResponse.ok("Order cancelled", order));
+    }
+
     // ── Admin endpoints ─────────────────────────────────────────────────────
 
     @Operation(summary = "List all orders", description = "Returns paginated list of all orders (admin only)")

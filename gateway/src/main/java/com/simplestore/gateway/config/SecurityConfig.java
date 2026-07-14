@@ -10,9 +10,13 @@ import org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder;
 import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.context.NoOpServerSecurityContextRepository;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.reactive.CorsWebFilter;
+import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 
 import javax.crypto.spec.SecretKeySpec;
 import java.util.Base64;
+import java.util.List;
 
 @Configuration
 @EnableWebFluxSecurity
@@ -29,8 +33,22 @@ public class SecurityConfig {
     }
 
     @Bean
+    public CorsWebFilter corsWebFilter() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOriginPatterns(List.of("*"));
+        config.setAllowedMethods(List.of("*"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setAllowCredentials(true);
+        config.setMaxAge(3600L);
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return new CorsWebFilter(source);
+    }
+
+    @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         http
+            .cors(cors -> {})
             .csrf(ServerHttpSecurity.CsrfSpec::disable)
             .securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
             .authorizeExchange(exchanges -> exchanges
@@ -46,6 +64,8 @@ public class SecurityConfig {
                 .pathMatchers(HttpMethod.GET, "/api/v1/catalog/products/**").permitAll()
                 .pathMatchers(HttpMethod.GET, "/api/v1/catalog/categories/**").permitAll()
                 .pathMatchers("/api/v1/cart/**").permitAll()
+                // CORS preflight - OPTIONS must be permitted before auth
+                .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 // All other endpoints require authentication
                 .anyExchange().authenticated()
             )
