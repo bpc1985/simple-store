@@ -18,7 +18,7 @@
                 <td th:text="${order.id}">1</td>
                 <td th:text="${order.userId}">user</td>
                 <td th:text="${order.orderDate}">2024-01-01</td>
-                <td th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 2, 'POINT')}">$0.00</td>
+                <td th:text="'$' + ${order.totalAmount}">$0.00</td>
                 <td>
                     <span class="status-badge" th:classappend="'status-' + ${order.status}" th:text="${order.status}">PENDING</span>
                 </td>

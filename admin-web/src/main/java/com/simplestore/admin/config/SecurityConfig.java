@@ -27,18 +27,12 @@ public class SecurityConfig {
                 .requestMatchers("/admin/login", "/css/**", "/js/**").permitAll()
                 .anyRequest().authenticated()
             )
-            .formLogin(form -> form
-                .loginPage("/admin/login")
-                .loginProcessingUrl("/admin/login")
-                .defaultSuccessUrl("/admin", true)
-                .permitAll()
+            .exceptionHandling(ex -> ex
+                .authenticationEntryPoint((request, response, authException) ->
+                        response.sendRedirect("/admin/login"))
             )
-            .logout(logout -> logout
-                .logoutUrl("/admin/logout")
-                .invalidateHttpSession(true)
-                .logoutSuccessUrl("/admin/login")
-                .permitAll()
-            )
+            .formLogin(form -> form.disable())
+            .logout(logout -> logout.disable())
             .addFilterBefore(sessionSecurityContextFilter(), BasicAuthenticationFilter.class)
             .csrf(csrf -> csrf.disable());
 

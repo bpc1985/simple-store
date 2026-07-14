@@ -22,8 +22,8 @@
                 <tbody>
                     <tr th:each="order : ${orders}">
                         <td th:text="${order.id}">#12345</td>
-                        <td th:text="${#temporals.format(order.orderDate, 'MMM dd, yyyy')}">Jan 01, 2024</td>
-                        <td th:text="'$' + ${#numbers.formatDecimal(order.totalAmount, 1, 2)}">$0.00</td>
+                        <td th:text="${#strings.substring(order.orderDate, 0, 10)}">2024-01-01</td>
+                        <td th:text="'$' + ${order.totalAmount}">$0.00</td>
                         <td>
                             <span class="order-status" th:text="${order.status}">Status</span>
                         </td>

@@ -1,5 +1,6 @@
 package com.simplestore.storefront.controller;
 
+import com.simplestore.storefront.dto.RegistrationForm;
 import com.simplestore.storefront.dto.TokenResponse;
 import com.simplestore.storefront.service.IdentityClientService;
 import com.simplestore.storefront.service.OrderClientService;
@@ -41,10 +42,11 @@ public class AccountController {
     }
 
     @GetMapping("/register")
-    public String registerPage(HttpSession session) {
+    public String registerPage(HttpSession session, Model model) {
         if (session.getAttribute(ACCESS_TOKEN_ATTR) != null) {
             return "redirect:/";
         }
+        model.addAttribute("registrationForm", new RegistrationForm());
         return "register";
     }
 

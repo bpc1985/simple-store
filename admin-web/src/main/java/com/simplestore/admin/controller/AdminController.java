@@ -1,6 +1,7 @@
 package com.simplestore.admin.controller;
 
 import com.simplestore.admin.service.AdminClientService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -70,27 +71,25 @@ public class AdminController {
     // --- Dashboard ---
 
     @GetMapping
-    public String dashboard(Model model) {
-        try {
-            Map<String, Object> stats = adminClientService.getDashboardStats();
-            model.addAttribute("stats", stats);
-        } catch (Exception e) {
-            model.addAttribute("stats", Map.of(
-                    "orders", 0, "revenue", 0, "products", 0, "users", 0));
-            model.addAttribute("error", "Could not load dashboard stats");
-        }
+    public String dashboard(Model model, HttpServletRequest request) {
+        model.addAttribute("currentPath", request.getRequestURI());
+        model.addAttribute("stats", Map.of(
+                "totalOrders", 0, "totalRevenue", "0.00",
+                "pendingOrders", 0, "confirmedOrders", 0));
         return "admin/dashboard";
     }
 
     // --- Products ---
 
     @GetMapping("/products")
-    public String products(@RequestParam(defaultValue = "0") int page, Model model) {
+    public String products(@RequestParam(defaultValue = "0") int page, Model model, HttpServletRequest request) {
+        model.addAttribute("currentPath", request.getRequestURI());
         try {
             Map<String, Object> result = adminClientService.getProducts(page);
-            model.addAttribute("products", result.get("content"));
+            model.addAttribute("products", result.getOrDefault("items", List.of()));
             model.addAttribute("currentPage", page);
-            model.addAttribute("totalPages", result.getOrDefault("totalPages", 1));
+            model.addAttribute("totalPages", result.containsKey("totalCount") ?
+                    (int)Math.ceil(((Number)result.get("totalCount")).doubleValue() / 20) : 1);
         } catch (Exception e) {
             model.addAttribute("products", List.of());
             model.addAttribute("currentPage", 0);
@@ -101,7 +100,8 @@ public class AdminController {
     }
 
     @GetMapping("/products/create")
-    public String createProductForm(Model model) {
+    public String createProductForm(Model model, HttpServletRequest request) {
+        model.addAttribute("currentPath", request.getRequestURI());
         model.addAttribute("product", new HashMap<String, Object>());
         model.addAttribute("isNew", true);
         return "admin/product-form";
@@ -132,7 +132,8 @@ public class AdminController {
     }
 
     @GetMapping("/products/{id}/edit")
-    public String editProductForm(@PathVariable Long id, Model model) {
+    public String editProductForm(@PathVariable Long id, Model model, HttpServletRequest request) {
+        model.addAttribute("currentPath", request.getRequestURI());
         try {
             Map<String, Object> product = adminClientService.getProduct(id);
             model.addAttribute("product", product);
@@ -183,7 +184,8 @@ public class AdminController {
     // --- Categories ---
 
     @GetMapping("/categories")
-    public String categories(Model model) {
+    public String categories(Model model, HttpServletRequest request) {
+        model.addAttribute("currentPath", request.getRequestURI());
         try {
             List<Map<String, Object>> categories = adminClientService.getCategories();
             model.addAttribute("categories", categories);
@@ -197,12 +199,14 @@ public class AdminController {
     // --- Orders ---
 
     @GetMapping("/orders")
-    public String orders(@RequestParam(defaultValue = "0") int page, Model model) {
+    public String orders(@RequestParam(defaultValue = "0") int page, Model model, HttpServletRequest request) {
+        model.addAttribute("currentPath", request.getRequestURI());
         try {
             Map<String, Object> result = adminClientService.getOrders(page);
-            model.addAttribute("orders", result.get("content"));
+            model.addAttribute("orders", result.getOrDefault("items", List.of()));
             model.addAttribute("currentPage", page);
-            model.addAttribute("totalPages", result.getOrDefault("totalPages", 1));
+            model.addAttribute("totalPages", result.containsKey("totalCount") ?
+                    (int)Math.ceil(((Number)result.get("totalCount")).doubleValue() / 20) : 1);
         } catch (Exception e) {
             model.addAttribute("orders", List.of());
             model.addAttribute("currentPage", 0);
@@ -213,7 +217,8 @@ public class AdminController {
     }
 
     @GetMapping("/orders/{id}")
-    public String orderDetail(@PathVariable Long id, Model model) {
+    public String orderDetail(@PathVariable Long id, Model model, HttpServletRequest request) {
+        model.addAttribute("currentPath", request.getRequestURI());
         try {
             Map<String, Object> order = adminClientService.getOrder(id);
             model.addAttribute("order", order);
@@ -235,6 +240,36 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("error", "Failed to update order status");
         }
         return "redirect:/admin/orders/" + id;
+    }
+
+    // --- Users ---
+
+    @GetMapping("/users")
+    public String users(Model model, HttpServletRequest request) {
+        model.addAttribute("currentPath", request.getRequestURI());
+        try {
+            Map<String, Object> result = adminClientService.getUsersPage();
+            model.addAttribute("users", result.getOrDefault("items", List.of()));
+        } catch (Exception e) {
+            model.addAttribute("users", List.of());
+            model.addAttribute("error", "Could not load users");
+        }
+        return "admin/users";
+    }
+
+    // --- Inventory ---
+
+    @GetMapping("/inventory")
+    public String inventory(Model model, HttpServletRequest request) {
+        model.addAttribute("currentPath", request.getRequestURI());
+        try {
+            Map<String, Object> result = adminClientService.getStockLevels();
+            model.addAttribute("stockLevels", result.getOrDefault("items", List.of()));
+        } catch (Exception e) {
+            model.addAttribute("stockLevels", List.of());
+            model.addAttribute("error", "Could not load inventory data");
+        }
+        return "admin/inventory";
     }
 
 }

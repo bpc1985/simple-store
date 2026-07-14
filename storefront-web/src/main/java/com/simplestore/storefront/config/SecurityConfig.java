@@ -25,9 +25,9 @@ public class SecurityConfig {
         http
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/", "/products/**", "/categories/**",
-                    "/css/**", "/js/**", "/images/**",
+                    "/css/**", "/js/**", "/images/**", "/cart/**",
                     "/account/login", "/account/register").permitAll()
-                .requestMatchers("/account/**", "/cart", "/cart/**", "/checkout", "/checkout/**").authenticated()
+                .requestMatchers("/account/**", "/checkout", "/checkout/**").authenticated()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(sessionSecurityContextFilter(), BasicAuthenticationFilter.class)

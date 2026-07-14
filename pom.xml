@@ -40,6 +40,7 @@
         <mapstruct.version>1.6.3</mapstruct.version>
         <lombok.version>1.18.46</lombok.version>
         <springdoc.version>2.7.0</springdoc.version>
+        <thymeleaf-layout-dialect.version>3.3.0</thymeleaf-layout-dialect.version>
         <logstash-encoder.version>8.0</logstash-encoder.version>
         <elastic-apm.version>1.52.0</elastic-apm.version>
     </properties>
@@ -57,6 +58,11 @@
                 <groupId>com.simplestore</groupId>
                 <artifactId>common</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>nz.net.ultraq.thymeleaf</groupId>
+                <artifactId>thymeleaf-layout-dialect</artifactId>
+                <version>${thymeleaf-layout-dialect.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.springdoc</groupId>

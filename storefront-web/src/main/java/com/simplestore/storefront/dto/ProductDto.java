@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.math.BigDecimal;
 
 @Data
@@ -17,7 +19,8 @@ public class ProductDto {
     private String description;
     private BigDecimal price;
     private String imageUrl;
-    private Integer stock;
+    @JsonProperty("stock")
+    private Integer stockQuantity;
     private Long categoryId;
     private String categoryName;
 }

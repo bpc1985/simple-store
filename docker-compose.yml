@@ -279,7 +279,7 @@ services:
   admin-web:
     build: ./admin-web
     ports:
-      - "8091:8080"
+      - "8091:8081"
     environment:
       GATEWAY_URL: http://gateway:8080
     depends_on:

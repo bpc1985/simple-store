@@ -7,7 +7,7 @@
         <div class="detail-row"><strong>Order ID:</strong> <span th:text="${order.id}"></span></div>
         <div class="detail-row"><strong>User ID:</strong> <span th:text="${order.userId}"></span></div>
         <div class="detail-row"><strong>Date:</strong> <span th:text="${order.orderDate}"></span></div>
-        <div class="detail-row"><strong>Total:</strong> <span th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 2, 'POINT')}"></span></div>
+        <div class="detail-row"><strong>Total:</strong> <span th:text="'$' + ${order.totalAmount}"></span></div>
         <div class="detail-row"><strong>Status:</strong> <span class="status-badge" th:classappend="'status-' + ${order.status}" th:text="${order.status}"></span></div>
         <div class="detail-row"><strong>Shipping:</strong> <span th:text="${order.shippingAddress}"></span></div>
         <h3>Items</h3>
@@ -19,8 +19,8 @@
                 <tr th:each="item : ${order.items}">
                     <td th:text="${item.productName}">Product</td>
                     <td th:text="${item.quantity}">1</td>
-                    <td th:text="${#numbers.formatDecimal(item.unitPrice, 0, 'COMMA', 2, 'POINT')}">$0.00</td>
-                    <td th:text="${#numbers.formatDecimal(item.unitPrice * item.quantity, 0, 'COMMA', 2, 'POINT')}">$0.00</td>
+                    <td th:text="'$' + ${item.unitPrice}">$0.00</td>
+                    <td th:text="'$' + (${item.unitPrice} * ${item.quantity})">$0.00</td>
                 </tr>
             </tbody>
         </table>

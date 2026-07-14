@@ -8,7 +8,6 @@
             <tr>
                 <th>Product ID</th>
                 <th>Current Stock</th>
-                <th>Last Updated</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -19,7 +18,6 @@
                     <span th:if="${entry.stockLevel <= 10}" style="color:red;font-weight:bold" th:text="${entry.stockLevel}">5</span>
                     <span th:unless="${entry.stockLevel <= 10}" th:text="${entry.stockLevel}">50</span>
                 </td>
-                <td th:text="${entry.updatedAt}">2024-01-01</td>
                 <td class="actions">
                     <form th:action="@{/admin/inventory/{id}(id=${entry.productId})}" method="post" class="form-inline">
                         <input type="number" name="stockLevel" th:value="${entry.stockLevel}" min="0" style="width:80px">

@@ -8,7 +8,7 @@
             <div class="stat-label">Total Orders</div>
         </div>
         <div class="stat-card">
-            <div class="stat-value" th:text="${#numbers.formatDecimal(stats.totalRevenue, 0, 'COMMA', 2, 'POINT')}">$0.00</div>
+            <div class="stat-value" th:text="'$' + ${stats.totalRevenue}">$0.00</div>
             <div class="stat-label">Total Revenue</div>
         </div>
         <div class="stat-card">

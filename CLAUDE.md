@@ -61,7 +61,7 @@ Swagger UI per service (via gateway): `http://localhost:8080/api/v1/<service>/sw
 
 Kibana (logs/traces/metrics): `http://localhost:5601`. RabbitMQ mgmt UI: `http://localhost:15672` (`simplestore`/`simplestore`).
 
-Seeded users: admin `admin@store.com` / `Admin123!`, user `user@store.com` / `User123!`.
+Seeded users: admin `admin@store.com` / `Admin123!`, user1 `user1@store.com` / `User123!`, user2 `user2@store.com` / `User123!`, user3 `user3@store.com` / `User123!`.
 
 ## Architecture
 
@@ -182,6 +182,17 @@ The `version: '3.9'` line triggers a deprecation warning. Can be removed — Doc
 
 A class annotated `@Component` with a `@Bean` method whose name matches the default class bean name causes "A bean with that name has already been defined". Solution: either implement `Consumer<T>` directly (no `@Bean` method), or ensure `@Bean` method names differ from the class-derived bean name (checkout pattern).
 
-### Port collisions between services
+### Web app pattern — BFF + session auth
 
-checkout-service `application.yml` sets `server.port: 8083` locally, same as cart-service. In Docker this is fine (container ports mapped to different host ports). When running locally, start only one of them or override the port.
+The two Thymeleaf web apps (`storefront-web`, `admin-web`) are Backend-For-Frontend shells:
+- Controllers use `@Controller` (not `@RestController`), return Thymeleaf view names
+- All backend calls go through `*ClientService` classes that use `RestClient` configured with `GatewayAuthInterceptor`
+- `GatewayAuthInterceptor` pulls `accessToken` from the HTTP session and attaches it as `Bearer` on every outbound call
+- Login stores the JWT in the session; logout invalidates the session
+- `AuthStatusInterceptor` (storefront) sets `authenticated` model attribute for nav toggle
+- `AdminController.login()` handles login directly — `formLogin()` MUST be disabled in SecurityConfig or Spring Security intercepts POST before controller
+- Dependencies: `spring-boot-starter-thymeleaf`, `thymeleaf-layout-dialect` (for `layout:decorate`), `thymeleaf-extras-java8time` (for `#temporals` in templates)
+
+### Swagger aggregation
+
+Gateway serves aggregated Swagger UI at `http://localhost:8080/swagger-ui.html`. `gateway/application.yml` lists all 6 service api-docs paths under `springdoc.swagger-ui.urls`. Gateway's `SecurityConfig` permits `/swagger-ui/**`, `/v3/api-docs/**`, `/webjars/**`, and per-service swagger paths. Each backend's SecurityConfig also permits its own `/api/v1/*/swagger-ui.html` and `/api/v1/*/api-docs` paths. `OpenApiConfig` in `common` defines shared servers (`http://localhost:8080`, `/`) — but only if the service's `@SpringBootApplication` scans `com.simplestore.common` (requires explicit `scanBasePackages`).

@@ -252,14 +252,26 @@ curl http://localhost:8080/api/v1/cart \
 | Bean definition override errors | Duplicate bean names. Check for `@Component` + `@Bean` method with same name in consumer classes. Implement `Consumer<T>` directly instead. |
 | Circular dependency in identity-service | `SecurityConfig ↔ IdentityService` cycle fixed with `@Lazy` on `AuthenticationManager`. If adding new injections, watch for cycles. |
 
-## Default Users
+## Swagger UI (Aggregated)
+
+All service APIs aggregated at: **http://localhost:8080/swagger-ui.html**
+
+Select a service from the dropdown, then click **Authorize** (padlock icon) to paste a Bearer JWT token for authenticated endpoints. Obtain a token via `POST /api/v1/identity/login` in the identity service section.
+
+## Seed Users
 
 Seeded automatically on first startup:
 
 | Role | Email | Password |
 |------|-------|----------|
 | Admin | `admin@store.com` | `Admin123!` |
-| User | `user@store.com` | `User123!` |
+| User 1 | `user1@store.com` | `User123!` |
+| User 2 | `user2@store.com` | `User123!` |
+| User 3 | `user3@store.com` | `User123!` |
+
+**Web apps:**
+- **Storefront:** http://localhost:8090 — browse products, register/login, add to cart, checkout
+- **Admin Dashboard:** http://localhost:8091/admin/login — manage products, categories, orders, users, inventory
 
 ## Observability — ELK Stack
 
