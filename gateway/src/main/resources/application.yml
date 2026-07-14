@@ -35,9 +35,7 @@ spring:
           allowedOrigins: "*"
           allowedMethods: "*"
           allowedHeaders: "*"
-  security.oauth2.resourceserver.jwt:
-    issuer-uri: http://identity-service:8080
-    jwk-set-uri: http://identity-service:8080/.well-known/jwks.json
+  security.oauth2.resourceserver.jwt.secret: ${JWT_SECRET:c2ltcGxlLXN0b3JlLXNlY3JldC1rZXktZm9yLWp3dC10b2tlbnMtc2hhcmVkLWFjcm9zcy1zZXJ2aWNlcw==}
 jwt.secret: ${JWT_SECRET:c2ltcGxlLXN0b3JlLXNlY3JldC1rZXktZm9yLWp3dC10b2tlbnMtc2hhcmVkLWFjcm9zcy1zZXJ2aWNlcw==}
 
 springdoc:

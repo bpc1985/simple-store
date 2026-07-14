@@ -5,7 +5,7 @@ import co.elastic.apm.attach.ElasticApmAttacher;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = {"com.simplestore.cart", "com.simplestore.common"})
 public class CartServiceApplication {
 
     public static void main(String[] args) {

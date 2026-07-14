@@ -6,7 +6,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = {"com.simplestore.identity", "com.simplestore.common"})
 @ConfigurationPropertiesScan
 public class IdentityServiceApplication {
 

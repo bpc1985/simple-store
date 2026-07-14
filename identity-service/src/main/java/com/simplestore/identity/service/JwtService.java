@@ -3,10 +3,10 @@ package com.simplestore.identity.service;
 import com.simplestore.identity.config.JwtConfig;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import java.util.Base64;
 import java.util.Date;
 import java.util.List;
@@ -21,7 +21,7 @@ public class JwtService {
     public JwtService(JwtConfig jwtConfig) {
         this.jwtConfig = jwtConfig;
         byte[] keyBytes = Base64.getDecoder().decode(jwtConfig.getSecret());
-        this.signingKey = Keys.hmacShaKeyFor(keyBytes);
+        this.signingKey = new SecretKeySpec(keyBytes, "HmacSHA256");
     }
 
     public String generateAccessToken(String userId, List<String> roles) {
@@ -31,7 +31,7 @@ public class JwtService {
                 .claim("roles", roles)
                 .issuedAt(new Date(now))
                 .expiration(new Date(now + jwtConfig.getExpiration()))
-                .signWith(signingKey)
+                .signWith(signingKey, Jwts.SIG.HS256)
                 .compact();
     }
 
