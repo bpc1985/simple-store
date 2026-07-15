@@ -58,7 +58,9 @@ OrderSubmitted → RESERVING_STOCK → StockReserved → PROCESSING_PAYMENT
 | **cart-service** | 8083 | Redis | Shopping cart (anonymous + authenticated) |
 | **order-service** | 8084 | PostgreSQL | Order creation & management |
 | **inventory-service** | 8085 | PostgreSQL | Stock levels + CQRS reservations |
-| **checkout-service** | 8086 | PostgreSQL | Saga orchestrator (event-driven only) |
+| **checkout-service** | 8086\* | PostgreSQL | Saga orchestrator (event-driven only, no HTTP) |
+
+> \* Checkout's `application.yml` sets `server.port: 8083`. Docker compose maps to 8086. When running locally with `spring-boot:run`, checkout boots on **8083**, not 8086.
 | **payment-service** | 8087 | PostgreSQL | Payment accounts & transactions |
 | **storefront-web** | 8090 | — | Customer storefront (Thymeleaf BFF) |
 | **admin-web** | 8091 | — | Admin dashboard (Thymeleaf BFF) |
@@ -144,6 +146,8 @@ docker-compose down -v       # stop + delete volumes (reset data)
 docker-compose down -v && docker-compose up --build -d
 ```
 
+> **Important:** Always use `--build` after `mvn clean install`. Without it, Docker reuses cached images with old JARs.
+
 ---
 
 ### Option 2: Docker (infra) + Local (services) 🔧
@@ -160,7 +164,7 @@ mvn -pl catalog-service spring-boot:run      # Terminal 2 — port 8082
 mvn -pl cart-service spring-boot:run         # Terminal 3 — port 8083
 mvn -pl order-service spring-boot:run        # Terminal 4 — port 8084
 mvn -pl inventory-service spring-boot:run    # Terminal 5 — port 8085
-mvn -pl checkout-service spring-boot:run     # Terminal 6 — port 8086
+mvn -pl checkout-service spring-boot:run     # Terminal 6 — port 8083 (note: yml uses 8083, Docker maps to 8086)
 mvn -pl payment-service spring-boot:run      # Terminal 7 — port 8087
 mvn -pl gateway spring-boot:run              # Terminal 8 — port 8080
 mvn -pl storefront-web spring-boot:run       # Terminal 9 — port 8090
@@ -326,6 +330,7 @@ The project ships with full **Logs, Metrics, and Traces** via the ELK stack:
 | Cart | http://localhost:8083/actuator/health |
 | Order | http://localhost:8084/actuator/health |
 | Inventory | http://localhost:8085/actuator/health |
+| Checkout | http://localhost:8086/actuator/health |
 | Payment | http://localhost:8087/actuator/health |
 
 ## Project Structure

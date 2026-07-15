@@ -38,7 +38,7 @@ Each backend service is a standard `spring-boot:run` app. Module names (Maven ar
 
 ### Tests
 
-There is currently no test source (`src/test` is empty across modules). When adding tests, follow Spring Boot conventions (`@SpringBootTest`, Testcontainers from the parent POM's `testcontainers.version`).
+**No test sources exist** — `src/test` is empty across all 11 modules. This is a reference/demo project. When adding tests, follow Spring Boot conventions (`@SpringBootTest`, Testcontainers from the parent POM's `testcontainers.version`). Run with `mvn test` or `mvn -pl <module> test`.
 
 ## Ports and access
 
