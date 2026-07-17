@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useCallback, useState, useEffect } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useProducts, useCategories } from "@/hooks/use-products";
 import ProductGrid from "@/components/products/product-grid";
@@ -9,19 +9,21 @@ import FilterPanel, { type ActiveFilters } from "@/components/products/filter-pa
 import SearchInput from "@/components/ui/search-input";
 import SortDropdown from "@/components/ui/sort-dropdown";
 import { Button } from "@/components/ui/button";
-import { X, Search } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { X, Search, ChevronRight } from "lucide-react";
+import Link from "next/link";
+import type { Product } from "@/types";
 
 function ProductsContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const page = parseInt(searchParams.get("page") || "0");
   const categoryId = searchParams.get("category") || undefined;
   const search = searchParams.get("search") || undefined;
   const sort = searchParams.get("sort") || "";
 
-  // Filters from URL
+  // Page is local state only — not in URL
+  const [page, setPage] = useState(0);
+
   const [activeFilters, setActiveFilters] = useState<ActiveFilters>({
     categoryId,
     inStockOnly: searchParams.get("inStock") === "true",
@@ -41,7 +43,49 @@ function ProductsContent() {
   );
   const { data: categories } = useCategories();
 
-  // Build URL params helper
+  // Reset page when search/filters/sort change
+  useEffect(() => {
+    setPage(0);
+  }, [search, categoryId, sort, activeFilters.categoryId, activeFilters.inStockOnly, activeFilters.minPrice, activeFilters.maxPrice]);
+
+  // Accumulate loaded products across pages so "Show More" appends instead of replacing
+  const [allItems, setAllItems] = useState<Product[]>([]);
+
+  useEffect(() => {
+    if (!productsData?.items) return;
+    if (page === 0) {
+      // Reset: new search/filter/sort
+      setAllItems(productsData.items);
+    } else {
+      // Append with dedup — stale data from keepPreviousData gets filtered out naturally
+      setAllItems((prev) => {
+        const existingIds = new Set(prev.map((p) => p.id));
+        const newItems = productsData.items.filter(
+          (p) => !existingIds.has(p.id)
+        );
+        return [...prev, ...newItems];
+      });
+    }
+  }, [page, productsData?.items]);
+
+  // Client-side sort applied to accumulated items
+  const sortedItems = useMemo(() => {
+    if (!allItems.length) return undefined;
+    const items = [...allItems];
+    switch (sort) {
+      case "price_asc":
+        return items.sort((a, b) => a.price - b.price);
+      case "price_desc":
+        return items.sort((a, b) => b.price - a.price);
+      case "name_asc":
+        return items.sort((a, b) => a.name.localeCompare(b.name));
+      case "newest":
+        return items.sort((a, b) => b.id - a.id);
+      default:
+        return items;
+    }
+  }, [sort, allItems]);
+
   const buildUrl = useCallback(
     (overrides: Record<string, string | undefined>) => {
       const params = new URLSearchParams();
@@ -49,7 +93,6 @@ function ProductsContent() {
         search: search || undefined,
         category: categoryId,
         sort: sort || undefined,
-        page: "0",
         inStock: activeFilters.inStockOnly ? "true" : undefined,
         minPrice: activeFilters.minPrice?.toString(),
         maxPrice: activeFilters.maxPrice?.toString(),
@@ -66,7 +109,7 @@ function ProductsContent() {
   const handleSearch = useCallback(
     (value: string) => {
       setSearchValue(value);
-      router.push(buildUrl({ search: value || undefined, page: "0" }));
+      router.push(buildUrl({ search: value || undefined }));
     },
     [router, buildUrl]
   );
@@ -87,7 +130,6 @@ function ProductsContent() {
           inStock: filters.inStockOnly ? "true" : undefined,
           minPrice: filters.minPrice?.toString(),
           maxPrice: filters.maxPrice?.toString(),
-          page: "0",
         })
       );
     },
@@ -107,15 +149,11 @@ function ProductsContent() {
   }, [router]);
 
   const handleLoadMore = useCallback(() => {
-    router.push(buildUrl({ page: String(page + 1) }));
-  }, [router, page, buildUrl]);
+    setPage((p) => p + 1);
+  }, []);
 
-  const totalPages = productsData
-    ? Math.ceil(productsData.totalCount / productsData.pageSize)
-    : 0;
-  const hasMore = page < totalPages - 1;
   const totalCount = productsData?.totalCount ?? 0;
-  const resultCount = productsData?.items?.length ?? 0;
+  const hasMore = allItems.length < totalCount;
 
   // Active filter chips
   const filterChips: { label: string; onRemove: () => void }[] = [];
@@ -131,31 +169,64 @@ function ProductsContent() {
   }
   if (activeFilters.inStockOnly) {
     filterChips.push({
-      label: "In Stock",
+      label: "In Stock Only",
       onRemove: () =>
         handleFilterChange({ ...activeFilters, inStockOnly: false }),
     });
   }
   if (activeFilters.minPrice !== undefined) {
     filterChips.push({
-      label: `Min $${activeFilters.minPrice}`,
+      label: `≥ $${activeFilters.minPrice}`,
       onRemove: () =>
         handleFilterChange({ ...activeFilters, minPrice: undefined }),
     });
   }
   if (activeFilters.maxPrice !== undefined) {
     filterChips.push({
-      label: `Max $${activeFilters.maxPrice}`,
+      label: `≤ $${activeFilters.maxPrice}`,
       onRemove: () =>
         handleFilterChange({ ...activeFilters, maxPrice: undefined }),
     });
   }
   const hasActiveFilters = filterChips.length > 0 || !!search;
 
+  // Find active category name for breadcrumb
+  const activeCategory = activeFilters.categoryId
+    ? categories?.find((c) => String(c.id) === activeFilters.categoryId)
+    : null;
+
   return (
     <div className="space-y-6">
+      {/* ── Breadcrumb ── */}
+      <nav className="flex items-center gap-1.5 text-sm text-muted-foreground">
+        <Link
+          href="/"
+          className="hover:text-foreground transition-colors"
+        >
+          Home
+        </Link>
+        <ChevronRight className="size-3.5" />
+        {activeCategory ? (
+          <>
+            <Link
+              href="/products"
+              className="hover:text-foreground transition-colors"
+            >
+              Shop
+            </Link>
+            <ChevronRight className="size-3.5" />
+            <span className="text-foreground font-medium">
+              {activeCategory.name}
+            </span>
+          </>
+        ) : (
+          <span className="text-foreground font-medium">Shop</span>
+        )}
+      </nav>
+
       {/* ── Sticky Toolbar ── */}
-      <div className="sticky top-[72px] z-30 -mx-4 px-4 py-3 bg-background/95 backdrop-blur-sm border-b border-border space-y-3">
+      <div className="sticky top-[72px] z-30 -mx-4 px-4 py-3 bg-background/95 backdrop-blur-sm border-b border-border space-y-2.5">
+        {/* Search + Filter + Sort */}
         <div className="flex items-center gap-3">
           <SearchInput
             value={searchValue}
@@ -174,76 +245,84 @@ function ProductsContent() {
         </div>
 
         {/* Result count + filter chips */}
-        <div className="flex items-center gap-2 flex-wrap">
-          {!isLoading && (
-            <span className="text-sm text-muted-foreground mr-2">
-              {totalCount > 0
-                ? `Showing ${resultCount} of ${totalCount} products`
-                : "No products found"}
-            </span>
-          )}
-          {filterChips.map((chip) => (
-            <button
-              key={chip.label}
-              onClick={chip.onRemove}
-              className="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary text-xs font-medium px-2.5 py-1 hover:bg-primary/20 transition-colors"
-            >
-              {chip.label}
-              <X className="size-3" />
-            </button>
-          ))}
-          {hasActiveFilters && (
-            <button
-              onClick={handleClearFilters}
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors ml-1"
-            >
-              Clear all
-            </button>
-          )}
-        </div>
+        {((search && !isLoading) || hasActiveFilters) && (
+          <div className="flex items-center gap-2 flex-wrap">
+            {!isLoading && search && (
+              <span className="text-xs text-muted-foreground font-medium">
+                {totalCount > 0
+                  ? `${totalCount} result${totalCount !== 1 ? "s" : ""}`
+                  : "No products found"}
+              </span>
+            )}
+            {filterChips.map((chip) => (
+              <button
+                key={chip.label}
+                onClick={chip.onRemove}
+                className="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary text-[11px] font-semibold px-2.5 py-1 hover:bg-primary/20 transition-colors"
+              >
+                {chip.label}
+                <X className="size-3" />
+              </button>
+            ))}
+            {hasActiveFilters && (
+              <button
+                onClick={handleClearFilters}
+                className="text-[11px] text-muted-foreground hover:text-foreground transition-colors ml-0.5 font-medium"
+              >
+                Clear all
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* ── Product Grid ── */}
-      {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      {/* ── Main Content (full width) ── */}
+      {!allItems.length && isLoading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
           {Array.from({ length: 8 }).map((_, i) => (
             <ProductSkeleton key={i} />
           ))}
         </div>
-      ) : productsData?.items && productsData.items.length > 0 ? (
+      ) : sortedItems && sortedItems.length > 0 ? (
         <>
-          <ProductGrid products={productsData.items} />
+          <div className={isLoading ? "opacity-70 pointer-events-none transition-opacity" : ""}>
+            <ProductGrid products={sortedItems} />
+          </div>
 
-          {/* Load More + Page indicator */}
-          <div className="flex flex-col items-center gap-3 pt-2 pb-8">
-            {hasMore ? (
+          {/* Load More */}
+          <div className="flex flex-col items-center gap-3 pt-4 pb-10">
+            {isLoading ? (
+              <Button variant="outline" size="lg" disabled className="rounded-full px-10 min-w-[180px] h-11">
+                Loading...
+              </Button>
+            ) : hasMore ? (
               <Button
                 variant="outline"
                 size="lg"
                 onClick={handleLoadMore}
-                className="rounded-full px-8 min-w-[160px]"
+                className="rounded-full px-10 min-w-[180px] h-11"
               >
                 Show More
               </Button>
             ) : (
-              <p className="text-sm text-muted-foreground">
-                You&apos;ve reached the end
+              <p className="text-sm text-muted-foreground font-medium">
+                You&apos;ve viewed all {sortedItems.length} products
               </p>
             )}
-            {totalPages > 1 && (
+            {totalCount > sortedItems.length && !isLoading && (
               <p className="text-xs text-muted-foreground">
-                Page {page + 1} of {totalPages}
+                Showing {sortedItems.length} of {totalCount} products
               </p>
             )}
           </div>
         </>
       ) : (
         <div className="text-center py-20">
-          <Search className="size-16 text-muted-foreground/20 mx-auto mb-4" />
+          <Search className="size-16 text-muted-foreground/15 mx-auto mb-4" />
           <h2 className="text-xl font-semibold mb-2">No products found</h2>
-          <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
+          <p className="text-muted-foreground mb-6 max-w-md mx-auto text-sm leading-relaxed">
             {search
-              ? `No results for "${search}". Try a different search term or browse categories.`
+              ? `No results for "${search}". Try a different search term or browse categories below.`
               : "Try adjusting your filters or check back later for new products."}
           </p>
           <div className="flex items-center justify-center gap-3 flex-wrap">
@@ -253,19 +332,18 @@ function ProductsContent() {
                 Clear Filters
               </Button>
             )}
-            <Button variant="default" onClick={() => router.push("/products")}>
+            <Button onClick={() => router.push("/products")}>
               Browse All Products
             </Button>
           </div>
 
-          {/* Category suggestions */}
           {categories && categories.length > 0 && (
-            <div className="mt-8">
-              <p className="text-sm text-muted-foreground mb-3">
-                Browse by category:
+            <div className="mt-10">
+              <p className="text-sm text-muted-foreground mb-3 font-medium">
+                Browse by category
               </p>
               <div className="flex flex-wrap justify-center gap-2">
-                {categories.slice(0, 6).map((cat) => (
+                {categories.map((cat) => (
                   <Button
                     key={cat.id}
                     variant="outline"
@@ -296,8 +374,8 @@ export default function ProductsPage() {
       fallback={
         <div className="space-y-6">
           <div className="h-[88px] bg-background border-b border-border -mx-4 px-4" />
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {Array.from({ length: 8 }).map((_, i) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {Array.from({ length: 6 }).map((_, i) => (
               <ProductSkeleton key={i} />
             ))}
           </div>

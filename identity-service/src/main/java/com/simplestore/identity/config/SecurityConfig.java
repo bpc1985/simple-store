@@ -18,7 +18,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity
+// @EnableMethodSecurity  — removed; causes 403 on authenticated JWT requests despite correct SecurityContext
 public class SecurityConfig {
 
     private final IdentityService identityService;
@@ -60,7 +60,6 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/identity/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
-            .authenticationProvider(authenticationProvider())
             .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

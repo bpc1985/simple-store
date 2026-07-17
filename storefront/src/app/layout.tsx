@@ -36,7 +36,7 @@ export default function RootLayout({
   );
 
   return (
-    <html lang="en" className={`h-full antialiased ${bodyFont.variable}`}>
+    <html lang="en" data-scroll-behavior="smooth" className={`h-full antialiased ${bodyFont.variable}`}>
       <body className="min-h-full flex flex-col">
         <a href="#main-content" className="skip-link">
           Skip to main content
