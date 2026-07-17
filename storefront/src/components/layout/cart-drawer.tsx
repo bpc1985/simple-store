@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useCartContext } from "@/lib/cart-context";
 import {
   useCart,
@@ -19,31 +18,7 @@ import {
 } from "@/components/ui/sheet";
 import { Trash2, ShoppingCart } from "lucide-react";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
-
-function StyledLink({
-  href,
-  variant = "default",
-  children,
-  onClick,
-}: {
-  href: string;
-  variant?: "default" | "outline";
-  children: React.ReactNode;
-  onClick?: () => void;
-}) {
-  const base =
-    "inline-flex items-center justify-center gap-1.5 rounded-lg text-sm font-medium transition-colors h-8 px-2.5";
-  const styles =
-    variant === "outline"
-      ? "border border-border bg-background hover:bg-muted"
-      : "bg-primary text-primary-foreground hover:bg-primary/80";
-  return (
-    <Link href={href} className={cn(base, styles, "flex-1")} onClick={onClick}>
-      {children}
-    </Link>
-  );
-}
+import StyledLink from "@/components/ui/styled-link";
 
 export default function CartDrawer() {
   const { cartOpen, closeCart, setItemCount } = useCartContext();
@@ -106,8 +81,16 @@ export default function CartDrawer() {
                   key={item.productId}
                   className="flex items-center gap-3 rounded-lg border p-3"
                 >
-                  <div className="h-14 w-14 shrink-0 rounded-md bg-muted flex items-center justify-center">
-                    <ShoppingCart className="size-5 text-muted-foreground" />
+                  <div className="h-14 w-14 shrink-0 rounded-md bg-muted flex items-center justify-center overflow-hidden">
+                    {item.imageUrl ? (
+                      <img
+                        src={item.imageUrl}
+                        alt={item.productName}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <ShoppingCart className="size-5 text-muted-foreground" />
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">
@@ -133,7 +116,7 @@ export default function CartDrawer() {
                         variant="ghost"
                         size="icon-xs"
                         onClick={() => handleRemove(item.productId)}
-                        className="text-red-500 hover:text-red-600"
+                        className="text-destructive hover:text-destructive/80"
                       >
                         <Trash2 className="size-3" />
                       </Button>
@@ -150,16 +133,16 @@ export default function CartDrawer() {
 
             <div className="flex items-center justify-between text-sm">
               <span className="font-medium">Total</span>
-              <span className="text-lg font-bold text-green-600">
+              <span className="text-lg font-semibold text-green-600">
                 ${cartData.total.toFixed(2)}
               </span>
             </div>
 
             <div className="flex gap-2">
-              <StyledLink href="/cart" variant="outline" onClick={closeCart}>
+              <StyledLink href="/cart" variant="outline" className="flex-1" onClick={closeCart}>
                 View Cart
               </StyledLink>
-              <StyledLink href="/checkout" onClick={closeCart}>
+              <StyledLink href="/checkout" className="flex-1" onClick={closeCart}>
                 Checkout
               </StyledLink>
             </div>

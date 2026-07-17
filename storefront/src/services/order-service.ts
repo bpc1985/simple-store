@@ -15,3 +15,7 @@ export async function cancelOrder(id: number): Promise<OrderDto> {
 export async function getMyOrders(): Promise<OrderDto[]> {
   return api.get("/api/v1/order/orders");
 }
+
+export async function getOrder(id: string): Promise<OrderDto> {
+  return api.get(`/api/v1/order/orders/${id}`);
+}

@@ -14,7 +14,6 @@ export default function ProductCard({ product }: { product: Product }) {
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
-    e.stopPropagation();
     addToCart.mutate(
       {
         productId: product.id,
@@ -34,46 +33,47 @@ export default function ProductCard({ product }: { product: Product }) {
   };
 
   return (
-    <Link href={`/products/${product.id}`}>
-      <div className="group relative flex flex-col rounded-xl bg-card ring-0 transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
-        {/* Image */}
-        <div className="aspect-[4/5] bg-muted rounded-xl overflow-hidden">
-          {product.imageUrl ? (
-            <img
-              src={product.imageUrl}
-              alt={product.name}
-              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-            />
-          ) : (
-            <div className="h-full w-full flex items-center justify-center">
-              <ShoppingCart className="size-10 text-muted-foreground/20" />
-            </div>
-          )}
-        </div>
+    <div className="group flex flex-col rounded-xl bg-card transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm">
+      {/* Image — links to PDP */}
+      <Link
+        href={`/products/${product.id}`}
+        className="aspect-[4/5] bg-muted rounded-xl overflow-hidden relative product-card-image"
+      >
+        {product.imageUrl ? (
+          <img
+            src={product.imageUrl}
+            alt={product.name}
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+          />
+        ) : (
+          <div className="h-full w-full flex items-center justify-center">
+            <ShoppingCart className="size-10 text-muted-foreground/20" />
+          </div>
+        )}
+      </Link>
 
-        {/* Info */}
-        <div className="flex flex-col gap-1 pt-3 pb-2 px-1">
-          <h3 className="font-[family-name:var(--font-heading)] text-base font-medium leading-snug line-clamp-2 group-hover:text-accent-foreground transition-colors">
+      {/* Info + always-visible Add button */}
+      <div className="flex flex-col gap-2 pt-3 pb-3 px-2">
+        <Link href={`/products/${product.id}`}>
+          <h3 className="text-base font-medium leading-snug line-clamp-2 transition-colors">
             {product.name}
           </h3>
-          <p className="text-sm font-medium text-primary">
+        </Link>
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-medium text-foreground tabular-nums">
             ${product.price.toFixed(2)}
           </p>
-        </div>
-
-        {/* Add to cart — visible on hover */}
-        <div className="absolute bottom-3 right-3 opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-200">
           <Button
             size="sm"
             onClick={handleAddToCart}
             disabled={addToCart.isPending}
-            className="shadow-lg"
+            className="sm:inline-flex"
           >
             <ShoppingCart className="size-3.5" />
-            <span className="hidden sm:inline">Add</span>
+            <span className="hidden sm:inline ml-1">Add</span>
           </Button>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }

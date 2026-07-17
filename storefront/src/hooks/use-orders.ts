@@ -22,6 +22,15 @@ export function useCancelOrder() {
   });
 }
 
+export function useOrder(id: string) {
+  return useQuery({
+    queryKey: ["orders", id],
+    queryFn: () => orderService.getOrder(id),
+    enabled:
+      typeof window !== "undefined" && !!localStorage.getItem("token") && !!id,
+  });
+}
+
 export function useCreateOrder() {
   const queryClient = useQueryClient();
   return useMutation({

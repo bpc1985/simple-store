@@ -7,23 +7,23 @@ export default function Footer() {
   const { isAuthenticated } = useAuth();
 
   return (
-    <footer className="border-t border-border pt-12 pb-6">
+    <footer className="border-t border-border pt-12 pb-6 bg-secondary/30">
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 gap-8 sm:grid-cols-3 mb-10">
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4 mb-10">
           {/* Brand */}
           <div>
-            <h4 className="font-[family-name:var(--font-heading)] text-sm font-semibold tracking-widest uppercase mb-3">
+            <h4 className="text-sm font-semibold tracking-widest uppercase mb-3">
               SimpleStore
             </h4>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Premium essentials. Thoughtfully curated, impeccably crafted.
+              Quality goods, fair prices. No fuss.
             </p>
           </div>
 
-          {/* Quick Links */}
+          {/* Shop */}
           <div>
-            <h4 className="font-[family-name:var(--font-heading)] text-sm font-semibold tracking-widest uppercase mb-3">
-              Quick Links
+            <h4 className="text-sm font-semibold tracking-widest uppercase mb-3">
+              Shop
             </h4>
             <ul className="space-y-2">
               <li>
@@ -31,7 +31,7 @@ export default function Footer() {
                   href="/products"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  Products
+                  All Products
                 </Link>
               </li>
               <li>
@@ -42,21 +42,53 @@ export default function Footer() {
                   Cart
                 </Link>
               </li>
-            </ul>
-          </div>
-
-          {/* Account */}
-          <div>
-            <h4 className="font-[family-name:var(--font-heading)] text-sm font-semibold tracking-widest uppercase mb-3">
-              Account
-            </h4>
-            <ul className="space-y-2">
               <li>
                 <Link
                   href="/account/orders"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Orders
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/wishlist"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Wishlist
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Support */}
+          <div>
+            <h4 className="text-sm font-semibold tracking-widest uppercase mb-3">
+              Support
+            </h4>
+            <ul className="space-y-2">
+              <li>
+                <Link
+                  href="/help"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Help Center
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/faq"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  FAQ
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/contact"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Contact Us
                 </Link>
               </li>
               {!isAuthenticated && (
@@ -69,6 +101,39 @@ export default function Footer() {
                   </Link>
                 </li>
               )}
+            </ul>
+          </div>
+
+          {/* Company */}
+          <div>
+            <h4 className="text-sm font-semibold tracking-widest uppercase mb-3">
+              Company
+            </h4>
+            <ul className="space-y-2">
+              <li>
+                <Link
+                  href="/about"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  About
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="#"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="#"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Terms of Service
+                </Link>
+              </li>
             </ul>
           </div>
         </div>

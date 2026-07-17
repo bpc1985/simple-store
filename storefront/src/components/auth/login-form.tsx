@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -9,6 +10,7 @@ import { useLogin } from "@/hooks/use-auth";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 
 const schema = z.object({
@@ -18,10 +20,11 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
-export default function LoginForm() {
+export default function LoginForm({ returnUrl = "/" }: { returnUrl?: string }) {
   const router = useRouter();
   const login = useLogin();
   const auth = useAuth();
+  const [showPassword, setShowPassword] = useState(false);
   const {
     register,
     handleSubmit,
@@ -34,7 +37,7 @@ export default function LoginForm() {
         auth.login(res.accessToken);
         localStorage.setItem("refreshToken", res.refreshToken);
         toast.success("Logged in successfully");
-        router.push("/");
+        router.push(returnUrl);
       },
       onError: (err) => toast.error(err.message),
     });
@@ -46,14 +49,28 @@ export default function LoginForm() {
         <label className="text-sm font-medium">Email</label>
         <Input type="email" {...register("email")} className="mt-1" />
         {errors.email && (
-          <p className="text-xs text-red-500 mt-1">{errors.email.message}</p>
+          <p className="text-xs text-destructive mt-1">{errors.email.message}</p>
         )}
       </div>
       <div>
         <label className="text-sm font-medium">Password</label>
-        <Input type="password" {...register("password")} className="mt-1" />
+        <div className="relative">
+          <Input
+            type={showPassword ? "text" : "password"}
+            {...register("password")}
+            className="mt-1 pr-10"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+            aria-label={showPassword ? "Hide password" : "Show password"}
+          >
+            {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+          </button>
+        </div>
         {errors.password && (
-          <p className="text-xs text-red-500 mt-1">
+          <p className="text-xs text-destructive mt-1">
             {errors.password.message}
           </p>
         )}

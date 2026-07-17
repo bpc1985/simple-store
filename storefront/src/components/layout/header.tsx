@@ -59,7 +59,7 @@ export default function Header() {
     <header
       className={`sticky top-0 z-40 transition-all duration-300 ${
         scrolled
-          ? "bg-background/80 backdrop-blur-md supports-[backdrop-filter:blur(0px)]:bg-background border-b border-border/50 shadow-sm"
+          ? "bg-background border-b border-border/50"
           : "bg-transparent border-transparent"
       }`}
     >
@@ -67,7 +67,7 @@ export default function Header() {
         {/* Logo */}
         <Link
           href="/"
-          className="font-[family-name:var(--font-heading)] text-xl font-semibold tracking-widest uppercase"
+          className="text-xl font-semibold tracking-widest uppercase"
         >
           SIMPLESTORE
         </Link>
@@ -113,6 +113,15 @@ export default function Header() {
                     {user?.fullName || user?.email}
                   </div>
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem>
+                    <Link
+                      href="/account"
+                      className="flex items-center gap-1.5 w-full"
+                    >
+                      <User className="size-4" />
+                      My Account
+                    </Link>
+                  </DropdownMenuItem>
                   <DropdownMenuItem>
                     <Link
                       href="/account/orders"

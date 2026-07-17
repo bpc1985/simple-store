@@ -3,6 +3,7 @@ import axios from "axios";
 const client = axios.create({
   baseURL: process.env.NEXT_PUBLIC_GATEWAY_URL,
   headers: { "Content-Type": "application/json" },
+  timeout: 10000,
 });
 
 // Request interceptor: attach JWT from localStorage (only if token exists)
@@ -20,6 +21,12 @@ client.interceptors.request.use((config) => {
 client.interceptors.response.use(
   (response) => response.data.data,
   (error) => {
+    if (error.code === "ECONNABORTED") {
+      return Promise.reject(new Error("Request timed out. Please try again."));
+    }
+    if (!error.response) {
+      return Promise.reject(new Error("Network error. Check your connection."));
+    }
     const message =
       error.response?.data?.message || error.message || "An error occurred";
     return Promise.reject(new Error(message));

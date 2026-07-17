@@ -1,32 +1,46 @@
 "use client";
 
-import Link from "next/link";
-import { useCart, useRemoveCartItem, useUpdateCartItem } from "@/hooks/use-cart";
+import { useCart, useRemoveCartItem, useUpdateCartItem, useAddToCart } from "@/hooks/use-cart";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ShoppingCart, Trash2, ArrowRight } from "lucide-react";
+import StyledLink from "@/components/ui/styled-link";
+import QuantitySelector from "@/components/ui/quantity-selector";
+import PriceDisplay from "@/components/ui/price-display";
+import EmptyState from "@/components/ui/empty-state";
+import TrustBadges from "@/components/ui/trust-badges";
+import { ShoppingCart, Trash2, ArrowRight, ShieldCheck, Truck, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 
 export default function CartPage() {
   const { data: cartData, isLoading } = useCart();
   const removeItem = useRemoveCartItem();
   const updateItem = useUpdateCartItem();
+  const addToCart = useAddToCart();
   const { isAuthenticated } = useAuth();
 
-  const handleRemove = (productId: number) => {
+  const handleRemove = (
+    productId: number,
+    productName: string,
+    price: number,
+    imageUrl: string,
+    quantity: number
+  ) => {
     removeItem.mutate(productId, {
-      onSuccess: () => toast.success("Item removed"),
+      onSuccess: () => {
+        toast.success("Item removed", {
+          action: {
+            label: "Undo",
+            onClick: () => {
+              addToCart.mutate(
+                { productId, productName, price, imageUrl, quantity },
+                { onError: (err) => toast.error(err.message) }
+              );
+            },
+          },
+        });
+      },
       onError: (err) => toast.error(err.message),
     });
   };
@@ -39,133 +53,189 @@ export default function CartPage() {
     );
   };
 
+  // ── Loading ──
   if (isLoading) {
     return (
       <div className="max-w-4xl mx-auto space-y-4">
         <Skeleton className="h-8 w-40" />
-        {Array.from({ length: 3 }).map((_, i) => (
-          <Skeleton key={i} className="h-16 w-full" />
-        ))}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-24 w-full rounded-xl" />
+            ))}
+          </div>
+          <Skeleton className="h-48 rounded-xl" />
+        </div>
       </div>
     );
   }
 
+  // ── Empty ──
   if (!cartData?.items?.length) {
     return (
-      <div className="max-w-4xl mx-auto text-center py-16">
-        <ShoppingCart className="size-16 text-muted-foreground/30 mx-auto mb-4" />
-        <h1 className="text-2xl font-bold mb-2">Your cart is empty</h1>
-        <p className="text-muted-foreground mb-4">
-          Looks like you haven&apos;t added anything yet.
-        </p>
-        <Link
-          href="/products"
-          className="inline-flex items-center justify-center rounded-lg bg-primary text-primary-foreground h-8 px-2.5 text-sm font-medium hover:bg-primary/80 transition-colors"
-        >
-          Browse Products
-        </Link>
+      <div className="max-w-4xl mx-auto">
+        <EmptyState
+          icon={ShoppingCart}
+          title="Your cart is empty"
+          description="Looks like you haven't added anything to your cart yet. Start browsing our products."
+          action={{ label: "Browse Products", href: "/products" }}
+        />
       </div>
     );
   }
+
+  const itemCount = cartData.items.reduce((s, i) => s + i.quantity, 0);
 
   return (
     <div className="max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">Shopping Cart</h1>
+      <h1 className="text-3xl font-semibold mb-6">
+        Shopping Cart ({itemCount})
+      </h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Cart items */}
-        <div className="lg:col-span-2">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Product</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead className="w-24">Quantity</TableHead>
-                <TableHead className="text-right">Subtotal</TableHead>
-                <TableHead className="w-16"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {cartData.items.map((item) => (
-                <TableRow key={item.productId}>
-                  <TableCell className="font-medium">
-                    {item.productName}
-                  </TableCell>
-                  <TableCell>${item.price.toFixed(2)}</TableCell>
-                  <TableCell>
-                    <Input
-                      type="number"
-                      min={1}
-                      value={item.quantity}
-                      onChange={(e) =>
-                        handleQuantityChange(
-                          item.productId,
-                          parseInt(e.target.value) || 1
-                        )
-                      }
-                      className="h-8 w-16 text-center"
+        {/* ── Cart Items (cards on mobile, cards on desktop too now) ── */}
+        <div className="lg:col-span-2 space-y-3">
+          {cartData.items.map((item) => (
+            <Card key={item.productId} className="p-4 hover:translate-y-0 hover:shadow-[var(--elevation-1)]">
+              <div className="flex gap-4">
+                {/* Thumbnail */}
+                <div className="h-20 w-20 shrink-0 rounded-lg bg-muted flex items-center justify-center overflow-hidden">
+                  {item.imageUrl ? (
+                    <img
+                      src={item.imageUrl}
+                      alt={item.productName}
+                      className="h-full w-full object-cover"
                     />
-                  </TableCell>
-                  <TableCell className="text-right font-medium">
-                    ${(item.price * item.quantity).toFixed(2)}
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="icon-xs"
-                      onClick={() => handleRemove(item.productId)}
-                      className="text-red-500 hover:text-red-600"
-                    >
-                      <Trash2 className="size-3" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                  ) : (
+                    <ShoppingCart className="size-6 text-muted-foreground/30" />
+                  )}
+                </div>
+
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium line-clamp-1">
+                    {item.productName}
+                  </p>
+                  <div className="mt-1">
+                    <PriceDisplay price={item.price} size="sm" />
+                  </div>
+
+                  <div className="flex items-center justify-between mt-3 gap-2">
+                    <QuantitySelector
+                      quantity={item.quantity}
+                      onChange={(qty) => handleQuantityChange(item.productId, qty)}
+                      size="sm"
+                    />
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-semibold tabular-nums">
+                        ${(item.price * item.quantity).toFixed(2)}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="icon-xs"
+                        onClick={() =>
+                          handleRemove(item.productId, item.productName, item.price, item.imageUrl, item.quantity)
+                        }
+                        className="text-destructive hover:text-destructive/80 shrink-0"
+                        aria-label={`Remove ${item.productName}`}
+                      >
+                        <Trash2 className="size-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          ))}
+
+          <div className="pt-2">
+            <StyledLink
+              href="/products"
+              variant="outline"
+              className="w-full sm:w-auto"
+            >
+              <ArrowRight className="size-4 rotate-180" />
+              Continue Shopping
+            </StyledLink>
+          </div>
         </div>
 
-        {/* Summary */}
-        <div>
+        {/* ── Order Summary (sticky on desktop) ── */}
+        <div className="lg:sticky lg:top-[88px] lg:self-start">
           <Card>
-            <CardContent className="p-4 space-y-4">
+            <CardContent className="p-5 space-y-4">
               <h2 className="font-semibold text-lg">Order Summary</h2>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">
-                  Items ({cartData.items.reduce((s, i) => s + i.quantity, 0)})
-                </span>
-                <span>${cartData.total.toFixed(2)}</span>
+
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">
+                    Subtotal ({itemCount} item{itemCount !== 1 ? "s" : ""})
+                  </span>
+                  <span className="font-medium tabular-nums">
+                    ${cartData.total.toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Shipping</span>
+                  <span className="text-muted-foreground">
+                    Calculated at next step
+                  </span>
+                </div>
               </div>
-              <div className="flex justify-between font-bold text-lg border-t pt-3">
-                <span>Total</span>
-                <span className="text-green-600">
-                  ${cartData.total.toFixed(2)}
-                </span>
+
+              <div className="border-t pt-3">
+                <div className="flex justify-between font-semibold text-base">
+                  <span>Total</span>
+                  <span className="tabular-nums">
+                    ${cartData.total.toFixed(2)}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Tax calculated at checkout
+                </p>
               </div>
+
               {isAuthenticated ? (
-                <Link
-                  href="/checkout"
-                  className="inline-flex items-center justify-center gap-1.5 w-full rounded-lg bg-primary text-primary-foreground h-8 px-2.5 text-sm font-medium hover:bg-primary/80 transition-colors"
-                >
+                <StyledLink href="/checkout" className="w-full">
                   Proceed to Checkout
                   <ArrowRight className="size-4" />
-                </Link>
+                </StyledLink>
               ) : (
                 <div className="space-y-2">
                   <p className="text-xs text-muted-foreground text-center">
                     Please log in to checkout
                   </p>
-                  <Link
-                    href="/account/login"
-                    className="inline-flex items-center justify-center w-full rounded-lg bg-primary text-primary-foreground h-8 px-2.5 text-sm font-medium hover:bg-primary/80 transition-colors"
-                  >
+                  <StyledLink href="/account/login" className="w-full">
                     Login to Checkout
-                  </Link>
+                  </StyledLink>
                 </div>
               )}
+
+              {/* Trust badges mini */}
+              <div className="pt-2 border-t">
+                <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
+                  <span className="inline-flex items-center gap-1" role="img" aria-label="Secure checkout">
+                    <ShieldCheck className="size-3" />
+                    Secure
+                  </span>
+                  <span className="inline-flex items-center gap-1" role="img" aria-label="Free shipping over $50">
+                    <Truck className="size-3" />
+                    Free over $50
+                  </span>
+                  <span className="inline-flex items-center gap-1" role="img" aria-label="Easy returns">
+                    <RotateCcw className="size-3" />
+                    Easy Returns
+                  </span>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
+      </div>
+
+      {/* ── Trust Bar ── */}
+      <div className="mt-12">
+        <TrustBadges className="rounded-2xl" />
       </div>
     </div>
   );
