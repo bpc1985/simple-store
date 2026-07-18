@@ -21,12 +21,17 @@ import java.util.Map;
 public class RedisCartService implements CartService {
 
     private static final String CART_KEY_PREFIX = "cart:";
+    private static final long CART_TTL_DAYS = 30;
 
     private final StringRedisTemplate redisTemplate;
     private final ObjectMapper objectMapper;
 
     private String cartKey(String owner) {
         return CART_KEY_PREFIX + owner;
+    }
+
+    private void touchCart(String owner) {
+        redisTemplate.expire(cartKey(owner), java.time.Duration.ofDays(CART_TTL_DAYS));
     }
 
     @Override
@@ -70,6 +75,7 @@ public class RedisCartService implements CartService {
 
         try {
             hashOps.put(key, field, objectMapper.writeValueAsString(item));
+            touchCart(owner);
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Failed to serialize cart item", e);
         }
@@ -94,6 +100,7 @@ public class RedisCartService implements CartService {
                 CartItem item = objectMapper.readValue(existingJson, CartItem.class);
                 item.setQuantity(quantity);
                 hashOps.put(key, field, objectMapper.writeValueAsString(item));
+                touchCart(owner);
             } catch (JsonProcessingException e) {
                 throw new RuntimeException("Failed to update cart item", e);
             }
@@ -106,6 +113,7 @@ public class RedisCartService implements CartService {
     public Cart removeItem(String owner, Long productId) {
         HashOperations<String, String, String> hashOps = redisTemplate.opsForHash();
         hashOps.delete(cartKey(owner), productId.toString());
+        touchCart(owner);
         log.debug("Removed item {} from cart of {}", productId, owner);
         return getCart(owner);
     }
