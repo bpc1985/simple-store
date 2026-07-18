@@ -1,7 +1,7 @@
 ---
 phase: 0
 title: "NextJS Storefront — Modern SPA replacing storefront-web"
-status: pending
+status: completed
 priority: P1
 effort: "3d"
 dependencies: []

@@ -1,7 +1,7 @@
 ---
 phase: 0
 title: "Mock Data Seeders"
-status: pending
+status: completed
 priority: P1
 effort: "3h"
 ---

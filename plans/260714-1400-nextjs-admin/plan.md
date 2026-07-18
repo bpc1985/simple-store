@@ -1,7 +1,7 @@
 ---
 phase: 0
 title: "NextJS Admin Dashboard — Modern SPA replacing admin-web"
-status: pending
+status: completed
 priority: P1
 effort: "3d"
 dependencies: []
