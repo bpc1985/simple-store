@@ -8,9 +8,9 @@ import StatusBadge from "@/components/subscriptions/status-badge";
 import CycleList from "@/components/subscriptions/cycle-list";
 import PriceDisplay from "@/components/ui/price-display";
 import PageHeader from "@/components/ui/page-header";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@simplestore/ui";
+import { Badge } from "@simplestore/ui";
+import { Skeleton } from "@simplestore/ui";
 import EmptyState from "@/components/ui/empty-state";
 import {
   Dialog,
@@ -19,7 +19,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@simplestore/ui";
 import {
   CalendarDays,
   RefreshCw,

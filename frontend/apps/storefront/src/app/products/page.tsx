@@ -8,7 +8,7 @@ import ProductSkeleton from "@/components/products/product-skeleton";
 import FilterPanel, { type ActiveFilters } from "@/components/products/filter-panel";
 import SearchInput from "@/components/ui/search-input";
 import SortDropdown from "@/components/ui/sort-dropdown";
-import { Button } from "@/components/ui/button";
+import { Button } from "@simplestore/ui";
 import { X, Search, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import type { Product } from "@/types";

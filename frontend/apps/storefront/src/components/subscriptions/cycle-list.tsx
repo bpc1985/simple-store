@@ -2,8 +2,8 @@
 
 import type { Cycle } from "@/types";
 import StatusBadge from "@/components/subscriptions/status-badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@simplestore/ui";
+import { Card, CardContent } from "@simplestore/ui";
 import { History } from "lucide-react";
 
 function formatInstant(iso: string | null): string {

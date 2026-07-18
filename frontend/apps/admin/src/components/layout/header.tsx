@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { Menu, LogOut } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@simplestore/ui";
 import { useLogout } from "@/hooks/use-auth";
 
 interface HeaderProps {

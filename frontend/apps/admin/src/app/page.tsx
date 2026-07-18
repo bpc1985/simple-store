@@ -1,6 +1,6 @@
 "use client";
 
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@simplestore/ui";
 import { useOrderStats, useDashboardCharts } from "@/hooks/use-dashboard";
 import { useSubscriptionStats } from "@/hooks/use-subscriptions";
 import {

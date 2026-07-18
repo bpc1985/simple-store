@@ -4,16 +4,16 @@ import { useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useOrder, useUpdateOrderStatus } from "@/hooks/use-orders";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@simplestore/ui";
+import { Badge } from "@simplestore/ui";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
+} from "@simplestore/ui";
+import { Skeleton } from "@simplestore/ui";
 import {
   Table,
   TableBody,
@@ -21,7 +21,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@simplestore/ui";
 import { ArrowLeft, Loader2, Package, ReceiptText, RefreshCw } from "lucide-react";
 
 const statuses = ["PENDING", "CONFIRMED", "SHIPPED", "CANCELLED"];

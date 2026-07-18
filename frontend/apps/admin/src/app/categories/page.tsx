@@ -1,7 +1,7 @@
 "use client";
 
 import { useCategories } from "@/hooks/use-products";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@simplestore/ui";
 import {
   Table,
   TableBody,
@@ -9,7 +9,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@simplestore/ui";
 import { FolderTree } from "lucide-react";
 
 export default function CategoriesPage() {

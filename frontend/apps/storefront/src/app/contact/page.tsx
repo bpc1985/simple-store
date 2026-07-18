@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import PageHeader from "@/components/ui/page-header";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@simplestore/ui";
+import { Input } from "@simplestore/ui";
+import { Card, CardContent } from "@simplestore/ui";
 import { Mail, Phone, Clock, MessageSquare, Send } from "lucide-react";
 import { toast } from "sonner";
 

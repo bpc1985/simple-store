@@ -6,14 +6,14 @@ import { useAuth } from "@/lib/auth-context";
 import { useCartContext } from "@/lib/cart-context";
 import { useLogout } from "@/hooks/use-auth";
 import { useCart } from "@/hooks/use-cart";
-import { Button } from "@/components/ui/button";
+import { Button } from "@simplestore/ui";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@simplestore/ui";
 import {
   ShoppingCart,
   User,
@@ -24,7 +24,7 @@ import {
   Menu,
   Repeat,
 } from "lucide-react";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger } from "@simplestore/ui";
 
 export default function Header() {
   const { isAuthenticated, user, isLoading, logout: clearAuth } = useAuth();

@@ -34,6 +34,12 @@
       ],
       "@simplestore/shared/lib/utils": [
         "../../packages/shared/src/lib/utils"
+      ],
+      "@simplestore/ui": [
+        "../../packages/ui/src"
+      ],
+      "@simplestore/ui/*": [
+        "../../packages/ui/src/*"
       ]
     }
   },

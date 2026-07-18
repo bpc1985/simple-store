@@ -3,10 +3,10 @@
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { useOrders } from "@/hooks/use-orders";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@simplestore/ui";
+import { Card, CardContent } from "@simplestore/ui";
+import { Badge } from "@simplestore/ui";
+import { Skeleton } from "@simplestore/ui";
 import EmptyState from "@/components/ui/empty-state";
 import PageHeader from "@/components/ui/page-header";
 import {

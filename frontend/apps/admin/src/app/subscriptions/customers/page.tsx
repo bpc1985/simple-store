@@ -3,16 +3,16 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useSubscriptions } from "@/hooks/use-subscriptions";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@simplestore/ui";
+import { Button } from "@simplestore/ui";
+import { Input } from "@simplestore/ui";
+import { Skeleton } from "@simplestore/ui";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-} from "@/components/ui/select";
+} from "@simplestore/ui";
 import {
   Table,
   TableBody,
@@ -20,7 +20,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@simplestore/ui";
 import { Eye, Users, Search } from "lucide-react";
 
 const statusMap: Record<string, { label: string; variant: "default" | "secondary" | "outline" | "destructive" }> = {

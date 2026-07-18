@@ -6,16 +6,16 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@simplestore/ui";
+import { Input } from "@simplestore/ui";
 import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-} from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
+} from "@simplestore/ui";
+import { Skeleton } from "@simplestore/ui";
 import { useProduct, useUpdateProduct, useCategories } from "@/hooks/use-products";
 import { ArrowLeft, Loader2 } from "lucide-react";
 

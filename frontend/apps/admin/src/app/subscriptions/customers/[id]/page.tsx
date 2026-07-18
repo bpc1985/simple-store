@@ -7,9 +7,9 @@ import {
   useCycles,
   useCancelSubscription,
 } from "@/hooks/use-subscriptions";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@simplestore/ui";
+import { Button } from "@simplestore/ui";
+import { Skeleton } from "@simplestore/ui";
 import {
   Table,
   TableBody,
@@ -17,7 +17,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@simplestore/ui";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,7 +33,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "@simplestore/ui";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { useState } from "react";
 

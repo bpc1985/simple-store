@@ -7,9 +7,9 @@ import { useAuth } from "@/lib/auth-context";
 import SubscribeDialog from "@/components/subscriptions/subscribe-dialog";
 import PageHeader from "@/components/ui/page-header";
 import PriceDisplay from "@/components/ui/price-display";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@simplestore/ui";
+import { Button } from "@simplestore/ui";
+import { Skeleton } from "@simplestore/ui";
 import EmptyState from "@/components/ui/empty-state";
 import {
   CalendarDays,

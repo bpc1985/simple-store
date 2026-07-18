@@ -2,9 +2,9 @@
 
 import { useCart, useRemoveCartItem, useUpdateCartItem, useAddToCart } from "@/hooks/use-cart";
 import { useAuth } from "@/lib/auth-context";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@simplestore/ui";
+import { Card, CardContent } from "@simplestore/ui";
+import { Skeleton } from "@simplestore/ui";
 import StyledLink from "@/components/ui/styled-link";
 import QuantitySelector from "@/components/ui/quantity-selector";
 import PriceDisplay from "@/components/ui/price-display";

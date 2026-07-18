@@ -3,9 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useOrders } from "@/hooks/use-orders";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@simplestore/ui";
+import { Badge } from "@simplestore/ui";
+import { Skeleton } from "@simplestore/ui";
 import {
   Table,
   TableBody,
@@ -13,7 +13,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@simplestore/ui";
 import { ChevronLeft, ChevronRight, Eye, ShoppingBag } from "lucide-react";
 
 const statusVariants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {

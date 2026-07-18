@@ -6,7 +6,7 @@ import {
   SelectValue,
   SelectContent,
   SelectItem,
-} from "@/components/ui/select";
+} from "@simplestore/ui";
 import { cn } from "@/lib/utils";
 
 export type SortOption = {

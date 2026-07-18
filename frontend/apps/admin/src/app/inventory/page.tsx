@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { useStockLevels, useUpdateStockLevel } from "@/hooks/use-inventory";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@simplestore/ui";
+import { Input } from "@simplestore/ui";
+import { Skeleton } from "@simplestore/ui";
 import {
   Table,
   TableBody,
@@ -12,7 +12,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@simplestore/ui";
 import { ChevronLeft, ChevronRight, Warehouse, Loader2 } from "lucide-react";
 
 export default function InventoryPage() {

@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useUsers, useLockUser, useUnlockUser } from "@/hooks/use-users";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@simplestore/ui";
+import { Skeleton } from "@simplestore/ui";
 import {
   Table,
   TableBody,
@@ -11,7 +11,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@simplestore/ui";
 import {
   AlertDialog,
   AlertDialogAction,

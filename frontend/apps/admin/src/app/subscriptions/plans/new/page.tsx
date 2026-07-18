@@ -5,15 +5,15 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@simplestore/ui";
+import { Input } from "@simplestore/ui";
 import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-} from "@/components/ui/select";
+} from "@simplestore/ui";
 import { useCreatePlan } from "@/hooks/use-subscriptions";
 import { ArrowLeft, Loader2 } from "lucide-react";
 

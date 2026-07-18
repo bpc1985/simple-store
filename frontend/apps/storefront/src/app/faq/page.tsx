@@ -4,7 +4,7 @@ import { Suspense, useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import PageHeader from "@/components/ui/page-header";
 import SearchInput from "@/components/ui/search-input";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@simplestore/ui";
 import { ChevronDown, MessageCircleQuestion } from "lucide-react";
 import StyledLink from "@/components/ui/styled-link";
 

@@ -4,7 +4,7 @@ import Link from "next/link";
 import type { Product } from "@/types";
 import { useAddToCart } from "@/hooks/use-cart";
 import { useCartContext } from "@/lib/cart-context";
-import { Button } from "@/components/ui/button";
+import { Button } from "@simplestore/ui";
 import StockBadge from "@/components/ui/stock-badge";
 import { ShoppingCart } from "lucide-react";
 import { toast } from "sonner";

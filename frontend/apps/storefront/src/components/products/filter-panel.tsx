@@ -9,15 +9,15 @@ import {
   DollarSign,
   Package,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@simplestore/ui";
+import { Input } from "@simplestore/ui";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@/components/ui/sheet";
+} from "@simplestore/ui";
 import { cn } from "@/lib/utils";
 import type { Category } from "@/types";
 

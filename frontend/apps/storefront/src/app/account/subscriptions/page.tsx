@@ -5,7 +5,7 @@ import { useMySubscriptions } from "@/hooks/use-subscriptions";
 import { useAuth } from "@/lib/auth-context";
 import SubscriptionCard from "@/components/subscriptions/subscription-card";
 import PageHeader from "@/components/ui/page-header";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@simplestore/ui";
 import EmptyState from "@/components/ui/empty-state";
 import { Box, User } from "lucide-react";
 

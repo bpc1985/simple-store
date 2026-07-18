@@ -3,7 +3,7 @@
 import Link from "next/link";
 import type { SubscriptionPlan } from "@/types";
 import PriceDisplay from "@/components/ui/price-display";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@simplestore/ui";
 import { CalendarDays, Repeat, Box } from "lucide-react";
 
 const cadenceMeta: Record<string, { label: string; icon: typeof CalendarDays }> = {

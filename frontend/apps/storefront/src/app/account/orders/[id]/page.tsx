@@ -6,10 +6,10 @@ import { useAuth } from "@/lib/auth-context";
 import { useOrder, useCancelOrder } from "@/hooks/use-orders";
 import PageHeader from "@/components/ui/page-header";
 import EmptyState from "@/components/ui/empty-state";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@simplestore/ui";
+import { Badge } from "@simplestore/ui";
+import { Card, CardContent } from "@simplestore/ui";
+import { Skeleton } from "@simplestore/ui";
 import {
   Package,
   XCircle,

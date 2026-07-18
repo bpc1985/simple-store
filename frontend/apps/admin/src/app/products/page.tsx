@@ -3,8 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useProducts, useDeleteProduct } from "@/hooks/use-products";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@simplestore/ui";
+import { Skeleton } from "@simplestore/ui";
 import {
   Table,
   TableBody,
@@ -12,7 +12,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@simplestore/ui";
 import {
   AlertDialog,
   AlertDialogAction,

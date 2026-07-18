@@ -7,15 +7,15 @@ import {
   useUpdateCartItem,
 } from "@/hooks/use-cart";
 import { useEffect, useState, useRef, useCallback } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
+import { Button } from "@simplestore/ui";
+import { Input } from "@simplestore/ui";
+import { Separator } from "@simplestore/ui";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet";
+} from "@simplestore/ui";
 import { Trash2, ShoppingCart } from "lucide-react";
 import { toast } from "sonner";
 import StyledLink from "@/components/ui/styled-link";

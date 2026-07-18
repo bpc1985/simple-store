@@ -3,7 +3,7 @@
 import { useSubscriptionPlans } from "@/hooks/use-subscriptions";
 import PlanCard from "@/components/subscriptions/plan-card";
 import PageHeader from "@/components/ui/page-header";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@simplestore/ui";
 import EmptyState from "@/components/ui/empty-state";
 import { PackageSearch } from "lucide-react";
 

@@ -11,10 +11,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+} from "@simplestore/ui";
+import { Button } from "@simplestore/ui";
 import PriceDisplay from "@/components/ui/price-display";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@simplestore/ui";
 import { CalendarDays, Repeat, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
