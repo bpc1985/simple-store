@@ -1,4 +1,4 @@
-package com.simplestore.order.config;
+package com.simplestore.common.config;
 
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.core.GrantedAuthority;
@@ -11,6 +11,17 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Converts JWT claims into Spring Security GrantedAuthority objects.
+ * Supports three claim formats:
+ * <ul>
+ *   <li>{@code roles} claim as a List (standard in this project)</li>
+ *   <li>{@code role} claim as a String (backward compatibility)</li>
+ *   <li>{@code realm_access.roles} claim (Keycloak compatibility)</li>
+ * </ul>
+ * <p>
+ * Each service imports this via component scan on {@code com.simplestore.common}.
+ */
 @Component
 public class JwtAuthConverter implements Converter<Jwt, Collection<GrantedAuthority>> {
 
@@ -18,7 +29,6 @@ public class JwtAuthConverter implements Converter<Jwt, Collection<GrantedAuthor
     public Collection<GrantedAuthority> convert(Jwt jwt) {
         List<GrantedAuthority> authorities = new ArrayList<>();
 
-        // Try "roles" claim
         Object rolesObj = jwt.getClaims().get("roles");
         if (rolesObj instanceof List<?> roles) {
             for (Object role : roles) {
@@ -30,7 +40,6 @@ public class JwtAuthConverter implements Converter<Jwt, Collection<GrantedAuthor
             }
         }
 
-        // Try "role" claim (single)
         Object roleObj = jwt.getClaims().get("role");
         if (roleObj instanceof String roleStr) {
             String normalized = roleStr.toUpperCase();
@@ -40,7 +49,6 @@ public class JwtAuthConverter implements Converter<Jwt, Collection<GrantedAuthor
             authorities.add(new SimpleGrantedAuthority(normalized));
         }
 
-        // Try realm_access roles (Keycloak-style)
         Map<String, Object> realmAccess = jwt.getClaim("realm_access");
         if (realmAccess != null && realmAccess.get("roles") instanceof List<?> realmRoles) {
             for (Object r : realmRoles) {

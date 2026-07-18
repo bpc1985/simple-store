@@ -1,5 +1,7 @@
 package com.simplestore.subscription.config;
 
+import com.simplestore.common.config.JwtAuthConverter;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
