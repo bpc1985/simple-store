@@ -131,6 +131,7 @@ docker-compose logs -f catalog-service   # single service
 | Order | http://localhost:8080/api/v1/order/swagger-ui.html |
 | Inventory | http://localhost:8080/api/v1/inventory/swagger-ui.html |
 | Payment | http://localhost:8080/api/v1/payment/swagger-ui.html |
+| Subscription | http://localhost:8080/api/v1/subscription/swagger-ui.html |
 
 **Stop everything:**
 
@@ -322,23 +323,50 @@ The project ships with full **Logs, Metrics, and Traces** via the ELK stack:
 | Inventory | http://localhost:8085/actuator/health |
 | Checkout | http://localhost:8086/actuator/health |
 | Payment | http://localhost:8087/actuator/health |
+| Subscription | http://localhost:8088/actuator/health |
+
+## Frontend Apps
+
+Two Next.js 15 frontends live in the `frontend/` Turborepo monorepo:
+
+```bash
+cd frontend && npm install          # Install workspace deps
+cd frontend && npx turbo build      # Build all apps
+cd frontend && npx turbo typecheck  # TypeScript check everything
+cd frontend && npm run dev:storefront  # Dev server (storefront)
+cd frontend && npm run dev:admin    # Dev server (admin)
+```
+
+| App | Port | Description |
+|-----|------|-------------|
+| storefront | 3000 | Customer-facing SPA (products, cart, checkout, account, subscriptions) |
+| admin | 3001 | Admin dashboard (products, orders, users, inventory, subscriptions) |
+
+Shared types and utilities live in `frontend/packages/shared/` (`@simplestore/shared`).
 
 ## Project Structure
 
 ```
 simple-store/
-├── pom.xml                 # Parent POM
-├── docker-compose.yml      # Infrastructure + services
-├── common/                 # Shared events & DTOs
-├── gateway/                # API Gateway
-├── identity-service/       # Auth service
-├── catalog-service/        # Product catalog
-├── cart-service/           # Shopping cart (Redis)
-├── order-service/          # Order management
-├── inventory-service/      # Stock (CQRS)
-├── checkout-service/       # Saga orchestrator
-├── payment-service/        # Payments
-└── subscription-service/   # Subscriptions & billing
+├── pom.xml                    # Maven parent POM
+├── docker-compose.yml         # Infrastructure + all services
+├── logstash.conf              # ELK log pipeline
+├── common/                    # Shared DTOs, events, JwtAuthConverter
+├── gateway/                   # Spring Cloud Gateway (8080)
+├── identity-service/          # Auth (JWT), user management (8081)
+├── catalog-service/           # Product catalog (8082)
+├── cart-service/              # Redis shopping cart (8083)
+├── order-service/             # Order management (8084)
+├── inventory-service/         # Stock + CQRS reservations (8085)
+├── checkout-service/          # Saga orchestrator, no HTTP (8086)
+├── payment-service/           # Payments + accounts (8087)
+├── subscription-service/      # Plans + recurring billing (8088)
+├── frontend/                  # Next.js Turborepo monorepo
+│   ├── apps/storefront/       # Customer SPA
+│   ├── apps/admin/            # Admin dashboard
+│   └── packages/shared/       # Shared types + utilities
+├── plans/                     # Implementation plans
+└── docs/                      # Documentation
 ```
 
 ## Events
@@ -349,6 +377,7 @@ simple-store/
 | `ReserveStockRequestedEvent` | Checkout | Inventory |
 | `StockReservedEvent` | Inventory | Checkout |
 | `StockReservationFailedEvent` | Inventory | Checkout |
+| `StockReservationCancelledEvent` | Inventory | Checkout |
 | `ProcessPaymentRequestedEvent` | Checkout | Payment |
 | `PaymentSucceededEvent` | Payment | Checkout |
 | `PaymentFailedEvent` | Payment | Checkout |
@@ -356,6 +385,9 @@ simple-store/
 | `OrderCancelledEvent` | Checkout | Order |
 | `StockLevelChangedEvent` | Inventory | Catalog |
 | `ProductUpdatedEvent` | Catalog | Cart |
+| `SubscriptionCycleStartedEvent` | Subscription | Subscription, Payment |
+| `SubscriptionPaymentSuccessEvent` | Payment | Subscription |
+| `SubscriptionPaymentFailedEvent` | Payment | Subscription |
 
 ## License
 
