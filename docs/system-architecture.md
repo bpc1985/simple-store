@@ -101,7 +101,25 @@ Initial subscription publishes cycle-started immediately; scheduler handles rene
 
 ## Frontend
 
-Next.js 15 Turborepo monorepo at `frontend/`:
-- `apps/storefront/` — customer SPA (port 3000)
-- `apps/admin/` — admin dashboard (port 3001)
-- `packages/shared/` — shared types + `cn()` utility (`@simplestore/shared`)
+Next.js 15 Turborepo monorepo at `frontend/`. npm workspaces with shared types and utilities.
+
+```
+frontend/
+├── package.json          # workspaces: ["apps/*", "packages/*"]
+├── turbo.json            # build, dev, lint, typecheck pipeline
+├── apps/
+│   ├── storefront/       # Customer SPA (port 3000)
+│   └── admin/            # Admin dashboard (port 3001)
+└── packages/
+    └── shared/           # @simplestore/shared — types, cn() utility
+```
+
+| App | Tech | Auth |
+|-----|------|------|
+| storefront | Next.js 15, Tailwind, shadcn/ui, React Query, Axios | JWT in localStorage; 401 → redirect `/account/login` |
+| admin | Next.js 15, Tailwind, shadcn/ui, React Query, Axios, Recharts | Separate `admin-token`; stores refresh token; backend logout |
+
+**Commands:**
+```bash
+cd frontend && npm install && npx turbo typecheck && npx turbo build
+```

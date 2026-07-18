@@ -27,13 +27,26 @@
 | `payment-service` | Payment accounts, transactions | PG | 8087 |
 | `subscription-service` | Plans, customer subs, recurring billing | PG | 8088 |
 
-## Frontend (npm workspaces)
+## Frontend (Turborepo + npm workspaces)
 
-| Package | Path | Description |
-|---------|------|-------------|
-| `storefront` | `frontend/apps/storefront/` | Customer SPA |
-| `admin` | `frontend/apps/admin/` | Admin dashboard |
-| `@simplestore/shared` | `frontend/packages/shared/` | Types, `cn()` utility |
+```
+frontend/
+├── package.json              # workspaces: ["apps/*", "packages/*"]
+├── turbo.json                # build, dev, lint, typecheck pipeline
+├── apps/
+│   ├── storefront/ (:3000)   # Customer SPA
+│   └── admin/ (:3001)        # Admin dashboard
+└── packages/
+    └── shared/               # @simplestore/shared — types + cn()
+```
+
+| Package | Port | Stack | Auth |
+|---------|------|-------|------|
+| `storefront` | 3000 | Next.js 15, Tailwind, shadcn/ui, React Query, Axios | JWT in localStorage, 401 → login redirect |
+| `admin` | 3001 | Next.js 15, Tailwind, shadcn/ui, React Query, Axios, Recharts | `admin-token`, refresh token, backend logout |
+| `@simplestore/shared` | — | TypeScript types, `cn()` (clsx + tailwind-merge) | — |
+
+TypeScript path aliases resolve `@simplestore/shared` → `../../packages/shared/src` from each app. No npm link needed; Next.js resolves via tsconfig paths.
 
 ## Key Patterns
 
