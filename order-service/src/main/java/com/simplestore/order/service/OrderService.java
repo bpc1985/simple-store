@@ -14,9 +14,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -55,23 +58,29 @@ public class OrderService {
 
         order = orderRepository.save(order);
 
-        // Publish OrderSubmittedEvent
+        // Publish OrderSubmittedEvent after transaction commit
+        UUID correlationId = order.getCorrelationId();
+        String orderUserId = order.getUserId();
+        java.time.Instant orderDate = order.getOrderDate();
+        BigDecimal totalAmount = order.getTotalAmount();
+        String shippingAddr = order.getShippingAddress();
         List<OrderSubmittedEvent.OrderItemDetail> itemDetails = order.getItems().stream()
                 .map(i -> new OrderSubmittedEvent.OrderItemDetail(
                         i.getProductId(), i.getProductName(), i.getQuantity(), i.getUnitPrice()))
                 .toList();
 
-        OrderSubmittedEvent event = new OrderSubmittedEvent(
-                order.getCorrelationId(),
-                order.getUserId(),
-                order.getOrderDate(),
-                order.getTotalAmount(),
-                order.getShippingAddress(),
-                itemDetails
-        );
-
-        streamBridge.send("order-submitted", event);
-        log.info("Order {} created and OrderSubmittedEvent published", order.getCorrelationId());
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                OrderSubmittedEvent event = new OrderSubmittedEvent(
+                        correlationId, orderUserId, orderDate, totalAmount, shippingAddr, itemDetails);
+                boolean sent = streamBridge.send("order-submitted", event);
+                if (!sent) {
+                    log.error("Failed to send order-submitted event for correlationId={}", correlationId);
+                }
+            }
+        });
+        log.info("Order {} created", correlationId);
 
         return toOrderDto(order);
     }

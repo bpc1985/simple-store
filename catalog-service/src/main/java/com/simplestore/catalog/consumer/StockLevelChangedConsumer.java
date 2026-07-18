@@ -19,10 +19,14 @@ public class StockLevelChangedConsumer implements Consumer<StockLevelChangedEven
     @Override
     public void accept(StockLevelChangedEvent event) {
         log.info("Received StockLevelChangedEvent: productId={}, newStock={}", event.productId(), event.newStockLevel());
-        Product product = productRepository.findById(event.productId())
-                .orElseThrow(() -> new RuntimeException("Product not found: " + event.productId()));
-        product.setStock(event.newStockLevel());
-        productRepository.save(product);
-        log.info("Updated stock for product {} to {}", event.productId(), event.newStockLevel());
+        productRepository.findById(event.productId()).ifPresentOrElse(
+                product -> {
+                    product.setStock(event.newStockLevel());
+                    productRepository.save(product);
+                    log.info("Updated stock for product {} to {}", event.productId(), event.newStockLevel());
+                },
+                () -> log.warn("StockLevelChangedEvent for unknown product {} — product may have been deleted, skipping",
+                        event.productId())
+        );
     }
 }
