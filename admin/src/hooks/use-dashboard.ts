@@ -1,8 +1,16 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { DashboardStats } from "@/types";
+import { OrderStats } from "@/types";
 import * as orderService from "@/services/order-service";
+
+export function useOrderStats() {
+  return useQuery<OrderStats>({
+    queryKey: ["order-stats"],
+    queryFn: orderService.getStats,
+    staleTime: 60 * 1000,
+  });
+}
 
 export interface RevenuePoint {
   date: string;
@@ -16,22 +24,21 @@ export interface ProductSale {
   revenue: number;
 }
 
-export interface DashboardData extends DashboardStats {
+export interface DashboardData {
+  totalOrders: number;
+  totalRevenue: number;
+  pendingOrders: number;
+  confirmedOrders: number;
   revenueByDate: RevenuePoint[];
   topProducts: ProductSale[];
 }
 
-export function useDashboardStats() {
-  return useQuery<DashboardData>({
-    queryKey: ["dashboard-stats"],
+export function useDashboardCharts() {
+  return useQuery<{ revenueByDate: RevenuePoint[]; topProducts: ProductSale[] }>({
+    queryKey: ["dashboard-charts"],
     queryFn: async () => {
-      const [orders] = await Promise.all([orderService.getOrders(0)]);
+      const orders = await orderService.getOrders(0);
 
-      const totalRevenue = orders.items.reduce((sum, o) => sum + o.totalAmount, 0);
-      const pendingOrders = orders.items.filter((o) => o.status === "PENDING").length;
-      const confirmedOrders = orders.items.filter((o) => o.status === "CONFIRMED").length;
-
-      // Revenue by date (grouped, sorted)
       const dateMap = new Map<string, { revenue: number; orders: number }>();
       for (const o of orders.items) {
         const d = o.orderDate.substring(0, 10);
@@ -44,7 +51,6 @@ export function useDashboardStats() {
         .map(([date, v]) => ({ date, revenue: v.revenue, orders: v.orders }))
         .sort((a, b) => a.date.localeCompare(b.date));
 
-      // Top products by units sold
       const productMap = new Map<string, { units: number; revenue: number }>();
       for (const o of orders.items) {
         for (const item of o.items ?? []) {
@@ -60,14 +66,8 @@ export function useDashboardStats() {
         .sort((a, b) => b.revenue - a.revenue)
         .slice(0, 8);
 
-      return {
-        totalOrders: orders.totalCount,
-        totalRevenue,
-        pendingOrders,
-        confirmedOrders,
-        revenueByDate,
-        topProducts,
-      };
+      return { revenueByDate, topProducts };
     },
+    staleTime: 5 * 60 * 1000,
   });
 }

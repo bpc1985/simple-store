@@ -64,6 +64,14 @@ export interface TokenResponse {
   expiresIn: number;
 }
 
+export interface OrderStats {
+  totalOrders: number;
+  pendingOrders: number;
+  confirmedOrders: number;
+  cancelledOrders: number;
+  totalRevenue: number;
+}
+
 export interface DashboardStats {
   totalOrders: number;
   totalRevenue: number;

@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -88,13 +89,16 @@ public class InventoryService {
         log.info("Processing ReserveStockRequestedEvent: correlationId={}, userId={}",
                 event.correlationId(), event.userId());
 
-        Map<Long, StockEntry> entriesToUpdate = new HashMap<>();
+        // Batch-fetch all stock entries for the requested products
+        Set<Integer> productIds = event.items().stream()
+                .map(item -> item.productId().intValue())
+                .collect(Collectors.toSet());
+        Map<Integer, StockEntry> entriesByProductId = stockEntryRepository.findByProductIdIn(productIds)
+                .stream().collect(Collectors.toMap(StockEntry::getProductId, e -> e));
 
-        // Check stock availability for all items
+        // Validate all products exist and have sufficient stock
         for (ReserveStockRequestedEvent.StockItem item : event.items()) {
-            StockEntry entry = stockEntryRepository.findByProductId(item.productId().intValue())
-                    .orElse(null);
-
+            StockEntry entry = entriesByProductId.get(item.productId().intValue());
             if (entry == null) {
                 String reason = "Product not found: " + item.productId();
                 log.warn("Stock reservation failed: {}", reason);
@@ -111,8 +115,6 @@ public class InventoryService {
                         new StockReservationFailedEvent(event.correlationId(), event.userId(), reason));
                 return;
             }
-
-            entriesToUpdate.put(item.productId(), entry);
         }
 
         // All items have sufficient stock — deduct and create reservation
@@ -125,10 +127,9 @@ public class InventoryService {
                 .build();
 
         for (ReserveStockRequestedEvent.StockItem item : event.items()) {
-            StockEntry entry = entriesToUpdate.get(item.productId());
+            StockEntry entry = entriesByProductId.get(item.productId().intValue());
             entry.setStockLevel(entry.getStockLevel() - item.quantity());
             entry.setUpdatedAt(Instant.now());
-            stockEntryRepository.save(entry);
 
             // Publish stock level change for catalog cache synchronization
             streamBridge.send("stock-level-changed",
@@ -141,6 +142,7 @@ public class InventoryService {
             reservation.addItem(reservationItem);
         }
 
+        stockEntryRepository.saveAll(entriesByProductId.values());
         stockReservationRepository.save(reservation);
 
         log.info("Stock reserved successfully for correlationId={}", event.correlationId());

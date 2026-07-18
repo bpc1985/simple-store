@@ -1,7 +1,7 @@
 "use client";
 
 import { Skeleton } from "@/components/ui/skeleton";
-import { useDashboardStats } from "@/hooks/use-dashboard";
+import { useOrderStats, useDashboardCharts } from "@/hooks/use-dashboard";
 import { useSubscriptionStats } from "@/hooks/use-subscriptions";
 import {
   ShoppingBag, DollarSign, Clock, CheckCircle2,
@@ -146,7 +146,8 @@ function SubscriptionStatCards() {
 }
 
 export default function DashboardPage() {
-  const { data: stats, isLoading, isError } = useDashboardStats();
+  const { data: stats, isLoading, isError } = useOrderStats();
+  const { data: charts, isLoading: chartsLoading } = useDashboardCharts();
 
   return (
     <div className="animate-fade-in">
@@ -223,16 +224,16 @@ export default function DashboardPage() {
               <p className="text-xs text-muted-foreground">Daily revenue</p>
             </div>
           </div>
-          {isLoading ? (
+          {chartsLoading ? (
             <Skeleton className="h-56 w-full rounded-lg" />
-          ) : !stats?.revenueByDate?.length ? (
+          ) : !charts?.revenueByDate?.length ? (
             <div className="flex flex-col items-center justify-center h-56 text-muted-foreground/30 gap-2">
               <TrendingUp className="size-10" />
               <p className="text-xs text-muted-foreground/50">No order data yet</p>
             </div>
           ) : (
             <ResponsiveContainer width="100%" height={220}>
-              <AreaChart data={stats.revenueByDate} margin={{ top: 4, right: 4, left: 4, bottom: 0 }}>
+              <AreaChart data={charts?.revenueByDate ?? []} margin={{ top: 4, right: 4, left: 4, bottom: 0 }}>
                 <defs>
                   <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="hsl(217 91% 60%)" stopOpacity={0.25} />
@@ -281,9 +282,9 @@ export default function DashboardPage() {
               <p className="text-xs text-muted-foreground">By revenue generated</p>
             </div>
           </div>
-          {isLoading ? (
+          {chartsLoading ? (
             <Skeleton className="h-56 w-full rounded-lg" />
-          ) : !stats?.topProducts?.length ? (
+          ) : !charts?.topProducts?.length ? (
             <div className="flex flex-col items-center justify-center h-56 text-muted-foreground/30 gap-2">
               <Package className="size-10" />
               <p className="text-xs text-muted-foreground/50">No product sales yet</p>
@@ -291,7 +292,7 @@ export default function DashboardPage() {
           ) : (
             <ResponsiveContainer width="100%" height={220}>
               <BarChart
-                data={stats.topProducts}
+                data={charts?.topProducts ?? []}
                 layout="vertical"
                 margin={{ top: 0, right: 4, left: 4, bottom: 0 }}
               >

@@ -144,15 +144,11 @@ public class OrderService {
     }
 
     public OrderStatsDto getStats() {
-        List<Order> all = orderRepository.findAll();
-        long total = all.size();
-        long pending = all.stream().filter(o -> o.getStatus() == OrderStatus.PENDING).count();
-        long confirmed = all.stream().filter(o -> o.getStatus() == OrderStatus.CONFIRMED).count();
-        long cancelled = all.stream().filter(o -> o.getStatus() == OrderStatus.CANCELLED).count();
-        BigDecimal revenue = all.stream()
-                .filter(o -> o.getStatus() == OrderStatus.CONFIRMED)
-                .map(Order::getTotalAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        long total = orderRepository.count();
+        long pending = orderRepository.countByStatus(OrderStatus.PENDING);
+        long confirmed = orderRepository.countByStatus(OrderStatus.CONFIRMED);
+        long cancelled = orderRepository.countByStatus(OrderStatus.CANCELLED);
+        BigDecimal revenue = orderRepository.sumTotalAmountByStatusConfirmed();
 
         return new OrderStatsDto(total, pending, confirmed, cancelled, revenue);
     }
