@@ -40,6 +40,16 @@ public class SubscriptionController {
         return ResponseEntity.ok(ApiResponse.ok(dtos));
     }
 
+    @Operation(summary = "Get plan", description = "Get a single subscription plan by ID")
+    @GetMapping("/plans/{id}")
+    public ResponseEntity<ApiResponse<SubscriptionPlanDto>> getPlan(@PathVariable Long id) {
+        SubscriptionPlan plan = subscriptionService.getPlan(id);
+        SubscriptionPlanDto dto = new SubscriptionPlanDto(
+                plan.getId(), plan.getName(), plan.getDescription(),
+                plan.getPrice(), plan.getCadence().name(), plan.getImageUrl(), plan.isActive());
+        return ResponseEntity.ok(ApiResponse.ok(dto));
+    }
+
     @Operation(summary = "Create plan", description = "Admin: create a new subscription plan")
     @PostMapping("/plans")
     @PreAuthorize("hasRole('ADMIN')")
@@ -70,6 +80,15 @@ public class SubscriptionController {
         String userId = jwt.getSubject();
         List<CustomerSubscriptionDto> subs = subscriptionService.getUserSubscriptions(userId);
         return ResponseEntity.ok(ApiResponse.ok(subs));
+    }
+
+    @Operation(summary = "Get my subscription", description = "Get a single subscription by ID (ownership-checked)")
+    @GetMapping("/my/{id}")
+    public ResponseEntity<ApiResponse<CustomerSubscriptionDto>> getMySubscription(
+            @PathVariable String id,
+            @AuthenticationPrincipal Jwt jwt) {
+        CustomerSubscriptionDto dto = subscriptionService.getUserSubscription(id, jwt.getSubject());
+        return ResponseEntity.ok(ApiResponse.ok(dto));
     }
 
     @Operation(summary = "Cancel subscription")

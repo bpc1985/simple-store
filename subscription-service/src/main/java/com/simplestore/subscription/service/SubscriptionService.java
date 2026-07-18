@@ -7,9 +7,12 @@ import com.simplestore.subscription.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.stream.function.StreamBridge;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -25,10 +28,18 @@ public class SubscriptionService {
     private final SubscriptionCycleRepository cycleRepository;
     private final StreamBridge streamBridge;
 
+    @Lazy
+    private final SubscriptionService self;
+
     // ── Plans ────────────────────────────────────────────────────────────────
 
     public List<SubscriptionPlan> getActivePlans() {
         return planRepository.findByActiveTrue();
+    }
+
+    public SubscriptionPlan getPlan(Long planId) {
+        return planRepository.findById(planId)
+                .orElseThrow(() -> new IllegalArgumentException("Plan not found: " + planId));
     }
 
     @Transactional
@@ -77,34 +88,61 @@ public class SubscriptionService {
                 .plan(plan)
                 .status(SubscriptionStatus.ACTIVE)
                 .startDate(today)
-                .nextBillingDate(today)
+                .nextBillingDate(computeNextBillingDate(today, plan.getCadence()))
                 .lastBillingDate(null)
                 .paymentMethodId(request.paymentMethodId())
                 .lockedPrice(plan.getPrice())
                 .build();
         subscription = subscriptionRepository.save(subscription);
 
-        // Publish initial cycle event for payment processing
+        // Publish initial cycle event for payment processing after transaction commits
         UUID correlationId = UUID.randomUUID();
-        streamBridge.send("subscription-cycle-started", new SubscriptionCycleStartedEvent(
-                correlationId,
-                subscriptionId,
-                userId,
-                plan.getId(),
-                1,
-                plan.getPrice(),
-                request.paymentMethodId()
-        ));
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                boolean sent = streamBridge.send("subscription-cycle-started", new SubscriptionCycleStartedEvent(
+                        correlationId,
+                        subscriptionId,
+                        userId,
+                        plan.getId(),
+                        1,
+                        plan.getPrice(),
+                        request.paymentMethodId()
+                ));
+                if (!sent) {
+                    log.error("Failed to send subscription-cycle-started event for subscription={}, cycle=1", subscriptionId);
+                }
+            }
+        });
 
         log.info("Subscription created: id={}, userId={}, plan={}, cycle=1", subscriptionId, userId, plan.getName());
         return mapToDto(subscription, 0);
     }
 
+    public CustomerSubscriptionDto getUserSubscription(String subscriptionId, String userId) {
+        CustomerSubscription sub = subscriptionRepository.findById(subscriptionId)
+                .orElseThrow(() -> new IllegalArgumentException("Subscription not found"));
+        if (!sub.getUserId().equals(userId)) {
+            throw new AccessDeniedException("Not your subscription");
+        }
+        List<SubscriptionCycle> cycles = cycleRepository
+                .findBySubscriptionIdOrderByCycleNumberDesc(subscriptionId);
+        return mapToDto(sub, cycles.isEmpty() ? 0 : cycles.getFirst().getCycleNumber());
+    }
+
     public List<CustomerSubscriptionDto> getUserSubscriptions(String userId) {
-        return subscriptionRepository.findByUserId(userId).stream()
+        List<CustomerSubscription> subs = subscriptionRepository.findByUserId(userId);
+        if (subs.isEmpty()) return List.of();
+
+        // Batch-fetch cycles for all subscriptions to avoid N+1 queries
+        List<String> subIds = subs.stream().map(CustomerSubscription::getId).toList();
+        var cyclesBySubId = cycleRepository.findBySubscriptionIdInOrderByCycleNumberDesc(subIds)
+                .stream()
+                .collect(java.util.stream.Collectors.groupingBy(SubscriptionCycle::getSubscriptionId));
+
+        return subs.stream()
                 .map(sub -> {
-                    List<SubscriptionCycle> cycles = cycleRepository
-                            .findBySubscriptionIdOrderByCycleNumberDesc(sub.getId());
+                    var cycles = cyclesBySubId.getOrDefault(sub.getId(), List.of());
                     return mapToDto(sub, cycles.isEmpty() ? 0 : cycles.getFirst().getCycleNumber());
                 })
                 .toList();
@@ -165,15 +203,30 @@ public class SubscriptionService {
         if (previousStatus == SubscriptionStatus.PAYMENT_FAILED) {
             cycleRepository.findBySubscriptionIdAndStatus(subscriptionId, CycleStatus.FAILED)
                     .ifPresent(failedCycle -> {
-                        streamBridge.send("subscription-cycle-started", new SubscriptionCycleStartedEvent(
-                                UUID.randomUUID(),
-                                subscriptionId,
-                                sub.getUserId(),
-                                sub.getPlan().getId(),
-                                failedCycle.getCycleNumber(),
-                                sub.getLockedPrice() != null ? sub.getLockedPrice() : sub.getPlan().getPrice(),
-                                sub.getPaymentMethodId()
-                        ));
+                        // Reset the existing FAILED cycle to PENDING instead of creating a new one
+                        // (avoids violating the UNIQUE constraint on subscriptionId + cycleNumber)
+                        failedCycle.setStatus(CycleStatus.PENDING);
+                        failedCycle.setPaymentTransactionId(null);
+                        cycleRepository.save(failedCycle);
+
+                        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                            @Override
+                            public void afterCommit() {
+                                boolean sent = streamBridge.send("subscription-cycle-started", new SubscriptionCycleStartedEvent(
+                                        UUID.randomUUID(),
+                                        subscriptionId,
+                                        sub.getUserId(),
+                                        sub.getPlan().getId(),
+                                        failedCycle.getCycleNumber(),
+                                        sub.getLockedPrice() != null ? sub.getLockedPrice() : sub.getPlan().getPrice(),
+                                        sub.getPaymentMethodId()
+                                ));
+                                if (!sent) {
+                                    log.error("Failed to send subscription-cycle-started for retry: subscriptionId={}, cycle={}",
+                                            subscriptionId, failedCycle.getCycleNumber());
+                                }
+                            }
+                        });
                         log.info("Retrying failed cycle: subscriptionId={}, cycle={}",
                                 subscriptionId, failedCycle.getCycleNumber());
                     });
@@ -184,34 +237,13 @@ public class SubscriptionService {
 
     /**
      * Process a subscription cycle after successful payment.
+     * Retries up to 3 times to handle the race between cycle creation and payment
+     * processing (both consume the same fanout event in parallel).
+     * Each retry runs in a fresh transaction so Thread.sleep does not hold a DB connection.
      */
-    @Transactional
     public void advanceCycle(String subscriptionId, String transactionId, int cycleNumber) {
-        CustomerSubscription sub = subscriptionRepository.findById(subscriptionId)
-                .orElseThrow(() -> new IllegalArgumentException("Subscription not found"));
-
-        if (sub.getStatus() != SubscriptionStatus.ACTIVE) {
-            log.warn("advanceCycle skipped — subscription {} is not ACTIVE (status={})", subscriptionId, sub.getStatus());
-            return;
-        }
-
-        // Idempotency: only process if a PENDING cycle exists for this subscription
-        // Retry loop to handle race condition with cycle creation consumer
         for (int attempt = 0; attempt < 3; attempt++) {
-            var pendingOpt = cycleRepository.findBySubscriptionIdAndStatus(subscriptionId, CycleStatus.PENDING);
-            if (pendingOpt.isPresent()) {
-                var cycle = pendingOpt.get();
-                cycle.setStatus(CycleStatus.CHARGED);
-                cycle.setPaymentTransactionId(transactionId);
-                cycleRepository.save(cycle);
-
-                // Advance billing date
-                sub.setLastBillingDate(sub.getNextBillingDate());
-                sub.setNextBillingDate(computeNextBillingDate(sub.getNextBillingDate(), sub.getPlan().getCadence()));
-                subscriptionRepository.save(sub);
-
-                log.info("Cycle advanced: subscriptionId={}, cycle={}, nextBilling={}",
-                        subscriptionId, cycleNumber, sub.getNextBillingDate());
+            if (self.tryAdvanceCycle(subscriptionId, transactionId, cycleNumber)) {
                 return;
             }
             if (attempt < 2) {
@@ -228,16 +260,52 @@ public class SubscriptionService {
     }
 
     /**
-     * Mark cycle as failed when payment fails.
+     * Single attempt to advance a cycle. Must be called through the Spring proxy
+     * (self.tryAdvanceCycle) to ensure @Transactional applies.
+     */
+    @Transactional
+    public boolean tryAdvanceCycle(String subscriptionId, String transactionId, int cycleNumber) {
+        CustomerSubscription sub = subscriptionRepository.findById(subscriptionId)
+                .orElseThrow(() -> new IllegalArgumentException("Subscription not found"));
+
+        if (sub.getStatus() != SubscriptionStatus.ACTIVE) {
+            log.warn("advanceCycle skipped — subscription {} is not ACTIVE (status={})", subscriptionId, sub.getStatus());
+            return true; // nothing to do, but don't retry
+        }
+
+        var pendingOpt = cycleRepository.findBySubscriptionIdAndStatus(subscriptionId, CycleStatus.PENDING);
+        if (pendingOpt.isPresent()) {
+            var cycle = pendingOpt.get();
+            cycle.setStatus(CycleStatus.CHARGED);
+            cycle.setPaymentTransactionId(transactionId);
+            cycle.setCompletedDate(java.time.Instant.now());
+            cycleRepository.save(cycle);
+
+            // Advance billing date
+            sub.setLastBillingDate(sub.getNextBillingDate());
+            sub.setNextBillingDate(computeNextBillingDate(sub.getNextBillingDate(), sub.getPlan().getCadence()));
+            subscriptionRepository.save(sub);
+
+            log.info("Cycle advanced: subscriptionId={}, cycle={}, nextBilling={}",
+                    subscriptionId, cycleNumber, sub.getNextBillingDate());
+            return true;
+        }
+        return false; // PENDING cycle not found — caller will retry
+    }
+
+    /**
+     * Mark a specific cycle as failed when payment fails.
      */
     @Transactional
     public void failCycle(String subscriptionId, int cycleNumber, String reason) {
         CustomerSubscription sub = subscriptionRepository.findById(subscriptionId)
                 .orElseThrow(() -> new IllegalArgumentException("Subscription not found"));
 
-        cycleRepository.findBySubscriptionIdAndStatus(subscriptionId, CycleStatus.PENDING)
+        cycleRepository.findBySubscriptionIdAndCycleNumber(subscriptionId, cycleNumber)
+                .filter(cycle -> cycle.getStatus() == CycleStatus.PENDING)
                 .ifPresent(cycle -> {
                     cycle.setStatus(CycleStatus.FAILED);
+                    cycle.setCompletedDate(java.time.Instant.now());
                     cycleRepository.save(cycle);
                 });
 
@@ -321,6 +389,26 @@ public class SubscriptionService {
     public CustomerSubscription getSubscription(String subscriptionId) {
         return subscriptionRepository.findById(subscriptionId)
                 .orElseThrow(() -> new IllegalArgumentException("Subscription not found: " + subscriptionId));
+    }
+
+    /**
+     * Batch-fetch subscriptions with their current cycle numbers to avoid N+1 queries.
+     */
+    public List<CustomerSubscriptionDto> getSubscriptionDtos(List<CustomerSubscription> subs) {
+        if (subs.isEmpty()) return List.of();
+
+        List<String> subIds = subs.stream().map(CustomerSubscription::getId).toList();
+        var cyclesBySubId = cycleRepository.findBySubscriptionIdInOrderByCycleNumberDesc(subIds)
+                .stream()
+                .collect(java.util.stream.Collectors.groupingBy(SubscriptionCycle::getSubscriptionId));
+
+        return subs.stream()
+                .map(sub -> {
+                    var cycles = cyclesBySubId.getOrDefault(sub.getId(), List.of());
+                    int currentCycle = cycles.isEmpty() ? 0 : cycles.getFirst().getCycleNumber();
+                    return mapToDto(sub, currentCycle);
+                })
+                .toList();
     }
 
     @Transactional

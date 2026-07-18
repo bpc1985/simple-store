@@ -8,6 +8,6 @@ public record CreatePlanRequest(
         @NotBlank String name,
         String description,
         @NotNull @Positive java.math.BigDecimal price,
-        String cadence,
+        @NotBlank String cadence,
         String imageUrl
 ) {}

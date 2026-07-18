@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -38,6 +39,7 @@ public class SubscriptionScheduler {
      * event-driven chain (consumer → payment → advance) handle the rest.
      */
     @Scheduled(cron = "0 0 2 * * ?")
+    @Transactional
     public void processDueSubscriptions() {
         // Acquire DB advisory lock to prevent duplicate scheduler runs
         if (!subscriptionRepository.tryAcquireSchedulerLock()) {

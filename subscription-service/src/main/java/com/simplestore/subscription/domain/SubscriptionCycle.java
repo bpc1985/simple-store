@@ -37,6 +37,9 @@ public class SubscriptionCycle {
     @Column
     private Instant completedDate;
 
+    @Version
+    private Long version;
+
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
 

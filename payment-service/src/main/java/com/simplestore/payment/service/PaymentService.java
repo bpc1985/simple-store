@@ -76,11 +76,16 @@ public class PaymentService {
             log.info("Payment succeeded for correlationId={}, userId={}, new balance={}",
                     event.correlationId(), event.userId(), account.getBalance());
 
-            boolean sent = streamBridge.send("payment-succeeded",
-                    new PaymentSucceededEvent(event.correlationId(), event.userId()));
-            if (!sent) {
-                log.error("Failed to send payment-succeeded event for correlationId={}", event.correlationId());
-            }
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    boolean sent = streamBridge.send("payment-succeeded",
+                            new PaymentSucceededEvent(event.correlationId(), event.userId()));
+                    if (!sent) {
+                        log.error("Failed to send payment-succeeded event for correlationId={}", event.correlationId());
+                    }
+                }
+            });
         } else {
             // Insufficient funds
             transaction.setStatus(TransactionStatus.FAILED);
@@ -90,11 +95,16 @@ public class PaymentService {
             log.warn("Payment failed for correlationId={}, userId={}, reason: Insufficient funds",
                     event.correlationId(), event.userId());
 
-            boolean sent = streamBridge.send("payment-failed",
-                    new PaymentFailedEvent(event.correlationId(), event.userId(), "Insufficient funds"));
-            if (!sent) {
-                log.error("Failed to send payment-failed event for correlationId={}", event.correlationId());
-            }
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    boolean sent = streamBridge.send("payment-failed",
+                            new PaymentFailedEvent(event.correlationId(), event.userId(), "Insufficient funds"));
+                    if (!sent) {
+                        log.error("Failed to send payment-failed event for correlationId={}", event.correlationId());
+                    }
+                }
+            });
         }
     }
 

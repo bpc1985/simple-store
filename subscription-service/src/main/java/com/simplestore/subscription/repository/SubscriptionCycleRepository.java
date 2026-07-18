@@ -13,5 +13,9 @@ public interface SubscriptionCycleRepository extends JpaRepository<SubscriptionC
 
     List<SubscriptionCycle> findBySubscriptionIdOrderByCycleNumberDesc(String subscriptionId);
 
+    List<SubscriptionCycle> findBySubscriptionIdInOrderByCycleNumberDesc(List<String> subscriptionIds);
+
     Optional<SubscriptionCycle> findBySubscriptionIdAndStatus(String subscriptionId, CycleStatus status);
+
+    Optional<SubscriptionCycle> findBySubscriptionIdAndCycleNumber(String subscriptionId, int cycleNumber);
 }

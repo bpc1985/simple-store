@@ -5,7 +5,6 @@ import com.simplestore.subscription.domain.CustomerSubscription;
 import com.simplestore.subscription.domain.SubscriptionCycle;
 import com.simplestore.subscription.domain.SubscriptionPlan;
 import com.simplestore.subscription.dto.*;
-import com.simplestore.subscription.repository.SubscriptionCycleRepository;
 import com.simplestore.subscription.service.SubscriptionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -26,7 +25,6 @@ import java.util.List;
 public class AdminSubscriptionController {
 
     private final SubscriptionService subscriptionService;
-    private final SubscriptionCycleRepository cycleRepository;
 
     // ── Plans ────────────────────────────────────────────────────────────────
 
@@ -74,9 +72,7 @@ public class AdminSubscriptionController {
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String userId) {
         List<CustomerSubscription> subs = subscriptionService.getAllSubscriptions(status, userId);
-        List<CustomerSubscriptionDto> dtos = subs.stream()
-                .map(this::toCustomerSubscriptionDto)
-                .toList();
+        List<CustomerSubscriptionDto> dtos = subscriptionService.getSubscriptionDtos(subs);
         return ResponseEntity.ok(ApiResponse.ok(dtos));
     }
 
@@ -84,7 +80,8 @@ public class AdminSubscriptionController {
     @GetMapping("/subscriptions/{id}")
     public ResponseEntity<ApiResponse<CustomerSubscriptionDto>> getSubscription(@PathVariable String id) {
         CustomerSubscription sub = subscriptionService.getSubscription(id);
-        return ResponseEntity.ok(ApiResponse.ok(toCustomerSubscriptionDto(sub)));
+        List<CustomerSubscriptionDto> dtos = subscriptionService.getSubscriptionDtos(List.of(sub));
+        return ResponseEntity.ok(ApiResponse.ok(dtos.getFirst()));
     }
 
     @Operation(summary = "Cancel subscription", description = "Admin: cancel any subscription")
@@ -107,27 +104,4 @@ public class AdminSubscriptionController {
         return ResponseEntity.ok(ApiResponse.ok(dtos));
     }
 
-    // ── Helpers ──────────────────────────────────────────────────────────────
-
-    private CustomerSubscriptionDto toCustomerSubscriptionDto(CustomerSubscription sub) {
-        List<SubscriptionCycle> cycles = cycleRepository
-                .findBySubscriptionIdOrderByCycleNumberDesc(sub.getId());
-        int currentCycle = cycles.isEmpty() ? 0 : cycles.getFirst().getCycleNumber();
-
-        SubscriptionPlan plan = sub.getPlan();
-        SubscriptionPlanDto planDto = new SubscriptionPlanDto(
-                plan.getId(), plan.getName(), plan.getDescription(),
-                plan.getPrice(), plan.getCadence().name(), plan.getImageUrl(), plan.isActive());
-
-        return new CustomerSubscriptionDto(
-                sub.getId(),
-                sub.getUserId(),
-                planDto,
-                sub.getStatus().name(),
-                sub.getStartDate(),
-                sub.getNextBillingDate(),
-                sub.getLastBillingDate(),
-                currentCycle
-        );
-    }
 }

@@ -43,6 +43,9 @@ public class CustomerSubscription {
     @Column(precision = 12, scale = 2)
     private BigDecimal lockedPrice;
 
+    @Version
+    private Long version;
+
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
 
