@@ -130,6 +130,10 @@ public class InventoryService {
             entry.setUpdatedAt(Instant.now());
             stockEntryRepository.save(entry);
 
+            // Publish stock level change for catalog cache synchronization
+            streamBridge.send("stock-level-changed",
+                    new StockLevelChangedEvent(item.productId(), entry.getStockLevel()));
+
             StockReservationItem reservationItem = StockReservationItem.builder()
                     .productId(item.productId().intValue())
                     .quantity(item.quantity())
@@ -171,6 +175,10 @@ public class InventoryService {
             entry.setStockLevel(entry.getStockLevel() + item.getQuantity());
             entry.setUpdatedAt(Instant.now());
             stockEntryRepository.save(entry);
+
+            // Publish stock level change for catalog cache synchronization
+            streamBridge.send("stock-level-changed",
+                    new StockLevelChangedEvent((long) item.getProductId(), entry.getStockLevel()));
         }
 
         reservation.setStatus(ReservationStatus.CANCELLED);

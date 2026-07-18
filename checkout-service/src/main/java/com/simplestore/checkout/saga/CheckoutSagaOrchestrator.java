@@ -21,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
@@ -35,9 +36,16 @@ public class CheckoutSagaOrchestrator {
     private final StreamBridge streamBridge;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    @Transactional
     public void handleOrderSubmitted(OrderSubmittedEvent event) {
         log.info("Handling OrderSubmittedEvent: correlationId={}, userId={}",
                 event.correlationId(), event.userId());
+
+        // Idempotency: skip if saga already exists (duplicate event delivery)
+        if (repository.findById(event.correlationId()).isPresent()) {
+            log.warn("Saga already exists for correlationId={}, skipping", event.correlationId());
+            return;
+        }
 
         List<StockItem> stockItems = event.items().stream()
                 .map(item -> new StockItem(item.productId(), item.quantity()))
@@ -72,6 +80,7 @@ public class CheckoutSagaOrchestrator {
                 event.correlationId(), reservationId);
     }
 
+    @Transactional
     public void handleStockReserved(StockReservedEvent event) {
         log.info("Handling StockReservedEvent: correlationId={}", event.correlationId());
 
@@ -79,24 +88,27 @@ public class CheckoutSagaOrchestrator {
                 .orElseThrow(() -> new IllegalStateException(
                         "Saga not found: " + event.correlationId()));
 
-        if (saga.getStatus() == SagaStatus.RESERVING_STOCK) {
-            UUID paymentId = UUID.randomUUID();
-            saga.setPaymentId(paymentId);
-            saga.setStatus(SagaStatus.PROCESSING_PAYMENT);
-            saga.setUpdatedAt(Instant.now());
-            repository.save(saga);
-
-            ProcessPaymentRequestedEvent paymentEvent = new ProcessPaymentRequestedEvent(
-                    event.correlationId(), saga.getUserId(), saga.getTotalAmount());
-            streamBridge.send("process-payment-requested", paymentEvent);
-            log.info("Published ProcessPaymentRequestedEvent: correlationId={}, paymentId={}",
-                    event.correlationId(), paymentId);
-        } else {
+        // Idempotency: only act if we are expecting this event
+        if (saga.getStatus() != SagaStatus.RESERVING_STOCK) {
             log.warn("Received StockReservedEvent but saga status is {} for correlationId={}",
                     saga.getStatus(), event.correlationId());
+            return;
         }
+
+        UUID paymentId = UUID.randomUUID();
+        saga.setPaymentId(paymentId);
+        saga.setStatus(SagaStatus.PROCESSING_PAYMENT);
+        saga.setUpdatedAt(Instant.now());
+        repository.save(saga);
+
+        ProcessPaymentRequestedEvent paymentEvent = new ProcessPaymentRequestedEvent(
+                event.correlationId(), saga.getUserId(), saga.getTotalAmount());
+        streamBridge.send("process-payment-requested", paymentEvent);
+        log.info("Published ProcessPaymentRequestedEvent: correlationId={}, paymentId={}",
+                event.correlationId(), paymentId);
     }
 
+    @Transactional
     public void handleStockReservationFailed(StockReservationFailedEvent event) {
         log.info("Handling StockReservationFailedEvent: correlationId={}, reason={}",
                 event.correlationId(), event.reason());
@@ -104,6 +116,13 @@ public class CheckoutSagaOrchestrator {
         CheckoutSagaState saga = repository.findById(event.correlationId())
                 .orElseThrow(() -> new IllegalStateException(
                         "Saga not found: " + event.correlationId()));
+
+        // Idempotency: only cancel if not already in a terminal state
+        if (saga.getStatus() == SagaStatus.CANCELLED || saga.getStatus() == SagaStatus.CONFIRMED) {
+            log.warn("Saga already in terminal state {} for correlationId={}, skipping",
+                    saga.getStatus(), event.correlationId());
+            return;
+        }
 
         saga.setStatus(SagaStatus.CANCELLED);
         saga.setReason(event.reason());
@@ -117,12 +136,20 @@ public class CheckoutSagaOrchestrator {
                 event.correlationId());
     }
 
+    @Transactional
     public void handlePaymentSucceeded(PaymentSucceededEvent event) {
         log.info("Handling PaymentSucceededEvent: correlationId={}", event.correlationId());
 
         CheckoutSagaState saga = repository.findById(event.correlationId())
                 .orElseThrow(() -> new IllegalStateException(
                         "Saga not found: " + event.correlationId()));
+
+        // Idempotency: only confirm if we are expecting this event
+        if (saga.getStatus() != SagaStatus.PROCESSING_PAYMENT) {
+            log.warn("Saga status is {} for correlationId={}, skipping payment success",
+                    saga.getStatus(), event.correlationId());
+            return;
+        }
 
         saga.setStatus(SagaStatus.CONFIRMED);
         saga.setUpdatedAt(Instant.now());
@@ -134,6 +161,7 @@ public class CheckoutSagaOrchestrator {
         log.info("Published OrderConfirmedEvent: correlationId={}", event.correlationId());
     }
 
+    @Transactional
     public void handlePaymentFailed(PaymentFailedEvent event) {
         log.info("Handling PaymentFailedEvent: correlationId={}, reason={}",
                 event.correlationId(), event.reason());
@@ -141,6 +169,13 @@ public class CheckoutSagaOrchestrator {
         CheckoutSagaState saga = repository.findById(event.correlationId())
                 .orElseThrow(() -> new IllegalStateException(
                         "Saga not found: " + event.correlationId()));
+
+        // Idempotency: only compensate if we are expecting this event
+        if (saga.getStatus() != SagaStatus.PROCESSING_PAYMENT) {
+            log.warn("Saga status is {} for correlationId={}, skipping payment failure",
+                    saga.getStatus(), event.correlationId());
+            return;
+        }
 
         saga.setReason(event.reason());
         saga.setStatus(SagaStatus.COMPENSATING);
@@ -155,6 +190,7 @@ public class CheckoutSagaOrchestrator {
                 event.correlationId());
     }
 
+    @Transactional
     public void handleStockReservationCancelled(StockReservationCancelledEvent event) {
         log.info("Handling StockReservationCancelledEvent: correlationId={}",
                 event.correlationId());
@@ -162,6 +198,13 @@ public class CheckoutSagaOrchestrator {
         CheckoutSagaState saga = repository.findById(event.correlationId())
                 .orElseThrow(() -> new IllegalStateException(
                         "Saga not found: " + event.correlationId()));
+
+        // Idempotency: only finalize if we are expecting this event
+        if (saga.getStatus() != SagaStatus.COMPENSATING) {
+            log.warn("Saga status is {} for correlationId={}, skipping cancellation finalization",
+                    saga.getStatus(), event.correlationId());
+            return;
+        }
 
         saga.setStatus(SagaStatus.CANCELLED);
         saga.setUpdatedAt(Instant.now());

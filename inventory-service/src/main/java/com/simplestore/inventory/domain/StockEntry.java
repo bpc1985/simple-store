@@ -26,4 +26,7 @@ public class StockEntry {
     @Column(nullable = false)
     @Builder.Default
     private Instant updatedAt = Instant.now();
+
+    @Version
+    private Long version;
 }

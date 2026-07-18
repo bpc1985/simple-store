@@ -56,7 +56,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             try {
                 UserDetails userDetails = identityService.loadUserByUserId(userId);
-                if (userDetails != null && jwtService.validateToken(token)) {
+                if (userDetails != null
+                        && userDetails.isEnabled()
+                        && userDetails.isAccountNonLocked()
+                        && jwtService.validateToken(token)) {
                     // Use userId as principal (not UserDetails) so principal.getName()
                     // returns the UUID, which getUserInfo() uses to findById().
                     UsernamePasswordAuthenticationToken authToken =
