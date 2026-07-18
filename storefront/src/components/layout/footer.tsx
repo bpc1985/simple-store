@@ -52,6 +52,14 @@ export default function Footer() {
               </li>
               <li>
                 <Link
+                  href="/subscriptions"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Subscriptions
+                </Link>
+              </li>
+              <li>
+                <Link
                   href="/wishlist"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >

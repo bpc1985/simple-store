@@ -17,12 +17,14 @@ import {
   LogOut,
   User,
   ChevronRight,
+  Repeat,
 } from "lucide-react";
 import { useLogout } from "@/hooks/use-auth";
 import { getStatusVariant } from "@/lib/order-utils";
 
 const QUICK_LINKS = [
   { icon: Package, label: "My Orders", href: "/account/orders", enabled: true },
+  { icon: Repeat, label: "Subscriptions", href: "/account/subscriptions", enabled: true },
   { icon: Heart, label: "Wishlist", href: "/wishlist", enabled: true },
   { icon: MapPin, label: "Addresses", href: "/account", enabled: false },
   { icon: Settings, label: "Settings", href: "/account", enabled: false },

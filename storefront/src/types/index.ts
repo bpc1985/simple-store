@@ -72,3 +72,41 @@ export interface OrderItemDto {
   quantity: number;
   unitPrice: number;
 }
+
+// ── Subscription ──────────────────────────────────────────────────────
+
+export interface SubscriptionPlan {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  cadence: string; // "MONTHLY" | "QUARTERLY"
+  imageUrl: string;
+  active: boolean;
+}
+
+export interface CustomerSubscription {
+  id: string;
+  userId: string;
+  plan: SubscriptionPlan;
+  status: string; // "ACTIVE" | "PAUSED" | "CANCELLED" | "PAYMENT_FAILED"
+  startDate: string;
+  nextBillingDate: string;
+  lastBillingDate: string | null;
+  currentCycle: number;
+}
+
+export interface SubscribeRequest {
+  planId: number;
+  paymentMethodId?: string;
+}
+
+export interface Cycle {
+  id: string;
+  cycleNumber: number;
+  status: string; // "PENDING" | "CHARGED" | "ASSEMBLING" | "SHIPPED" | "FAILED"
+  paymentTransactionId: string | null;
+  orderId: string | null;
+  scheduledDate: string;
+  completedDate: string | null;
+}

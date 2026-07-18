@@ -9,7 +9,9 @@ import ProductSkeleton from "@/components/products/product-skeleton";
 import SearchInput from "@/components/ui/search-input";
 import SectionHeader from "@/components/ui/section-header";
 import TrustBadges from "@/components/ui/trust-badges";
-import { ArrowRight, ShoppingBag, Smartphone, Shirt, Home, Dumbbell, BookOpen, LayoutGrid } from "lucide-react";
+import { ArrowRight, ShoppingBag, Smartphone, Shirt, Home, Dumbbell, BookOpen, LayoutGrid, Box } from "lucide-react";
+import { useSubscriptionPlans } from "@/hooks/use-subscriptions";
+import PlanCard from "@/components/subscriptions/plan-card";
 import type { LucideIcon } from "lucide-react";
 
 // Categories mapped to Lucide icons
@@ -45,6 +47,7 @@ export default function HomePage() {
   const [search, setSearch] = useState("");
   const { data: productsData, isLoading } = useProducts(0);
   const { data: categories } = useCategories();
+  const { data: plans } = useSubscriptionPlans();
   const [recentIds, setRecentIds] = useState<number[]>([]);
 
   useEffect(() => {
@@ -154,6 +157,22 @@ export default function HomePage() {
                   {cat.name}
                 </span>
               </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ── Subscription Boxes ── */}
+      {plans && plans.length > 0 && (
+        <section>
+          <SectionHeader
+            title="Subscription Boxes"
+            viewAllHref="/subscriptions"
+          />
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {plans.slice(0, 3).map((plan) => (
+              <PlanCard key={plan.id} plan={plan} />
             ))}
           </div>
         </section>

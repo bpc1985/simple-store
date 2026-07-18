@@ -22,6 +22,7 @@ import {
   LogIn,
   UserPlus,
   Menu,
+  Repeat,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
@@ -131,6 +132,16 @@ export default function Header() {
                       My Orders
                     </Link>
                   </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Link
+                      href="/account/subscriptions"
+                      className="flex items-center gap-1.5 w-full"
+                    >
+                      <Repeat className="size-4" />
+                      Subscriptions
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={handleLogout}
                     className="text-destructive cursor-pointer"
@@ -187,6 +198,12 @@ export default function Header() {
                             className="text-sm font-medium hover:text-foreground"
                           >
                             My Orders
+                          </Link>
+                          <Link
+                            href="/account/subscriptions"
+                            className="text-sm font-medium hover:text-foreground"
+                          >
+                            Subscriptions
                           </Link>
                           <button
                             onClick={handleLogout}
