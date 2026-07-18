@@ -9,8 +9,15 @@
     "./types": "./src/types/index.ts",
     "./lib/utils": "./src/lib/utils.ts"
   },
+  "scripts": {
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit"
+  },
   "dependencies": {
     "clsx": "^2.1.1",
     "tailwind-merge": "^3.6.0"
+  },
+  "devDependencies": {
+    "typescript": "^5"
   }
 }
