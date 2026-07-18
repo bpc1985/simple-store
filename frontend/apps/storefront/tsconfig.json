@@ -27,13 +27,13 @@
         "./src/*"
       ],
       "@simplestore/shared": [
-        "../packages/shared/src"
+        "../../packages/shared/src"
       ],
       "@simplestore/shared/types": [
-        "../packages/shared/src/types"
+        "../../packages/shared/src/types"
       ],
       "@simplestore/shared/lib/utils": [
-        "../packages/shared/src/lib/utils"
+        "../../packages/shared/src/lib/utils"
       ]
     }
   },

@@ -254,9 +254,29 @@ All 6 saga handlers in `CheckoutSagaOrchestrator` are annotated `@Transactional`
 
 ### Frontend apps
 
-Two Next.js 15 frontends live at `storefront/` and `admin/`. They share types and the `cn()` utility via `packages/shared/` (imported as `@simplestore/shared`). Both use Tailwind CSS, shadcn/ui, React Query, and Axios.
+Two Next.js 15 frontends live in the `frontend/` Turborepo monorepo:
+
+```
+frontend/
+├── apps/
+│   ├── storefront/    # Customer-facing SPA
+│   └── admin/         # Admin dashboard
+├── packages/
+│   └── shared/        # Shared types + cn() utility (@simplestore/shared)
+├── package.json       # npm workspaces config
+└── turbo.json         # Turborepo pipeline
+```
+
+Both use Tailwind CSS, shadcn/ui, React Query, Axios, react-hook-form + zod. Shared types and `cn()` live in `frontend/packages/shared/` (imported as `@simplestore/shared` via tsconfig paths).
 
 - **storefront** — customer-facing SPA (products, cart, checkout, account, subscriptions). JWT stored in localStorage; 401 handler redirects to `/account/login`.
 - **admin** — admin dashboard (products, orders, users, inventory, subscription management). Separate auth using `admin-token` key; login calls `identityService.login()` and stores refresh token; logout calls backend to revoke.
-- Both use `@tanstack/react-query` for server state and `react-hook-form` + `zod` for form validation.
-- TypeScript checks: `cd admin && npx tsc --noEmit` or `cd storefront && npx tsc --noEmit`.
+
+**Commands:**
+```bash
+cd frontend && npm install           # Install all workspace deps
+cd frontend && npx turbo typecheck   # TypeScript check all apps + packages
+cd frontend && npx turbo build       # Build all apps
+cd frontend && npm run dev:storefront  # Dev server for storefront only
+cd frontend && npm run dev:admin     # Dev server for admin only
+```

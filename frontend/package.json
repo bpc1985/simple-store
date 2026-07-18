@@ -1,0 +1,17 @@
+{
+  "name": "frontend",
+  "private": true,
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "dev": "turbo dev",
+    "dev:storefront": "turbo dev --filter=storefront",
+    "dev:admin": "turbo dev --filter=admin",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck"
+  },
+  "packageManager": "npm@11.2.0",
+  "devDependencies": {
+    "turbo": "^2"
+  }
+}
