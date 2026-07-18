@@ -2,9 +2,10 @@
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDashboardStats } from "@/hooks/use-dashboard";
+import { useSubscriptionStats } from "@/hooks/use-subscriptions";
 import {
   ShoppingBag, DollarSign, Clock, CheckCircle2,
-  TrendingUp, Package, AlertTriangle,
+  TrendingUp, Package, AlertTriangle, Repeat,
 } from "lucide-react";
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis,
@@ -89,6 +90,61 @@ function ChartTooltip({ active, payload, label, valueFormatter, labelFormatter }
   );
 }
 
+function SubscriptionStatCards() {
+  const { data: subStats, isLoading: subLoading } = useSubscriptionStats();
+
+  return (
+    <>
+      <div className="relative overflow-hidden rounded-xl border border-border bg-card p-5 transition-all duration-200 hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5">
+        <div className="absolute inset-0 bg-gradient-to-br from-sky-500/15 to-sky-600/5 opacity-60" />
+        <div className="relative flex items-start justify-between">
+          <div className="space-y-1">
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              Active Subs
+            </p>
+            {subLoading ? (
+              <Skeleton className="h-9 w-24 mt-0.5" />
+            ) : (
+              <p className="text-3xl font-bold tabular-nums tracking-tight text-sky-300">
+                {subStats?.activeCount ?? "--"}
+              </p>
+            )}
+          </div>
+          <div className="flex size-10 items-center justify-center rounded-lg bg-sky-500/15">
+            <Repeat className="size-5 text-sky-400" />
+          </div>
+        </div>
+      </div>
+      <div className="relative overflow-hidden rounded-xl border border-border bg-card p-5 transition-all duration-200 hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5">
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/15 to-emerald-600/5 opacity-60" />
+        <div className="relative flex items-start justify-between">
+          <div className="space-y-1">
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              MRR
+            </p>
+            {subLoading ? (
+              <Skeleton className="h-9 w-24 mt-0.5" />
+            ) : (
+              <p className="text-3xl font-bold tabular-nums tracking-tight text-emerald-300">
+                {subStats
+                  ? new Intl.NumberFormat("en-US", {
+                      style: "currency",
+                      currency: "USD",
+                      minimumFractionDigits: 0,
+                    }).format(subStats.mrr)
+                  : "--"}
+              </p>
+            )}
+          </div>
+          <div className="flex size-10 items-center justify-center rounded-lg bg-emerald-500/15">
+            <DollarSign className="size-5 text-emerald-400" />
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
 export default function DashboardPage() {
   const { data: stats, isLoading, isError } = useDashboardStats();
 
@@ -116,7 +172,7 @@ export default function DashboardPage() {
       )}
 
       {/* Stat cards */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {statsConfig.map((item) => {
           const Icon = item.icon;
           return (
@@ -151,6 +207,7 @@ export default function DashboardPage() {
             </div>
           );
         })}
+        <SubscriptionStatCards />
       </div>
 
       {/* Charts */}

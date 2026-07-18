@@ -27,6 +27,10 @@ public interface CustomerSubscriptionRepository extends JpaRepository<CustomerSu
 
     long countByUserId(String userId);
 
+    List<CustomerSubscription> findByStatus(SubscriptionStatus status);
+
+    List<CustomerSubscription> findByStatusAndUserId(SubscriptionStatus status, String userId);
+
     @Query(value = "SELECT pg_try_advisory_lock(42)", nativeQuery = true)
     boolean tryAcquireSchedulerLock();
 

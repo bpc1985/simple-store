@@ -87,3 +87,53 @@ export interface DashboardData extends DashboardStats {
   revenueByDate: RevenuePoint[];
   topProducts: ProductSale[];
 }
+
+// ── Subscriptions ────────────────────────────────────────────────────────
+
+export interface SubscriptionPlan {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  cadence: "MONTHLY" | "QUARTERLY";
+  imageUrl: string;
+  active: boolean;
+}
+
+export interface CustomerSubscription {
+  id: string;
+  userId: string;
+  plan: SubscriptionPlan;
+  status: "ACTIVE" | "PAUSED" | "CANCELLED" | "PAYMENT_FAILED";
+  startDate: string;
+  nextBillingDate: string;
+  lastBillingDate: string | null;
+  currentCycle: number;
+}
+
+export interface Cycle {
+  id: string;
+  cycleNumber: number;
+  status: string;
+  paymentTransactionId: string | null;
+  orderId: string | null;
+  scheduledDate: string;
+  completedDate: string | null;
+}
+
+export interface CreatePlanRequest {
+  name: string;
+  description: string;
+  price: number;
+  cadence: string;
+  imageUrl: string;
+}
+
+export interface UpdatePlanRequest {
+  name?: string;
+  description?: string;
+  price?: number;
+  cadence?: string;
+  imageUrl?: string;
+  active?: boolean;
+}

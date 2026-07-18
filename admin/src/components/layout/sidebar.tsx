@@ -10,6 +10,7 @@ import {
   ShoppingBag,
   Users,
   Warehouse,
+  Repeat,
 } from "lucide-react";
 
 const navItems = [
@@ -19,6 +20,7 @@ const navItems = [
   { href: "/orders", label: "Orders", icon: ShoppingBag },
   { href: "/users", label: "Users", icon: Users },
   { href: "/inventory", label: "Inventory", icon: Warehouse },
+  { href: "/subscriptions", label: "Subscriptions", icon: Repeat },
 ];
 
 export function Sidebar({ className }: { className?: string }) {

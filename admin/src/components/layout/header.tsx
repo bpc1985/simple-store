@@ -16,6 +16,9 @@ const breadcrumbLabels: Record<string, string> = {
   orders: "Orders",
   users: "Users",
   inventory: "Inventory",
+  subscriptions: "Subscriptions",
+  plans: "Plans",
+  customers: "Customers",
   new: "New",
   edit: "Edit",
 };

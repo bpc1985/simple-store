@@ -280,6 +280,70 @@ public class SubscriptionService {
         return cycleRepository.findBySubscriptionIdOrderByCycleNumberDesc(subscriptionId);
     }
 
+    // ── Admin: Plans ──────────────────────────────────────────────────────────
+
+    public List<SubscriptionPlan> getAllPlans() {
+        return planRepository.findAll();
+    }
+
+    @Transactional
+    public SubscriptionPlan updatePlan(Long planId, UpdatePlanRequest request) {
+        SubscriptionPlan plan = planRepository.findById(planId)
+                .orElseThrow(() -> new IllegalArgumentException("Plan not found: " + planId));
+
+        if (request.name() != null) plan.setName(request.name());
+        if (request.description() != null) plan.setDescription(request.description());
+        if (request.price() != null) plan.setPrice(request.price());
+        if (request.cadence() != null)
+            plan.setCadence(SubscriptionCadence.valueOf(request.cadence().toUpperCase()));
+        if (request.imageUrl() != null) plan.setImageUrl(request.imageUrl());
+        if (request.active() != null) plan.setActive(request.active());
+
+        return planRepository.save(plan);
+    }
+
+    // ── Admin: Subscriptions ─────────────────────────────────────────────────
+
+    public List<CustomerSubscription> getAllSubscriptions(String status, String userId) {
+        if (status != null && userId != null) {
+            return subscriptionRepository.findByStatusAndUserId(
+                    SubscriptionStatus.valueOf(status.toUpperCase()), userId);
+        }
+        if (status != null) {
+            return subscriptionRepository.findByStatus(SubscriptionStatus.valueOf(status.toUpperCase()));
+        }
+        if (userId != null) {
+            return subscriptionRepository.findByUserId(userId);
+        }
+        return subscriptionRepository.findAll();
+    }
+
+    public CustomerSubscription getSubscription(String subscriptionId) {
+        return subscriptionRepository.findById(subscriptionId)
+                .orElseThrow(() -> new IllegalArgumentException("Subscription not found: " + subscriptionId));
+    }
+
+    @Transactional
+    public void cancelSubscriptionAdmin(String subscriptionId) {
+        CustomerSubscription sub = subscriptionRepository.findById(subscriptionId)
+                .orElseThrow(() -> new IllegalArgumentException("Subscription not found"));
+        if (sub.getStatus() != SubscriptionStatus.ACTIVE
+                && sub.getStatus() != SubscriptionStatus.PAUSED
+                && sub.getStatus() != SubscriptionStatus.PAYMENT_FAILED) {
+            throw new IllegalStateException("Cannot cancel subscription in " + sub.getStatus() + " status");
+        }
+        sub.setStatus(SubscriptionStatus.CANCELLED);
+        subscriptionRepository.save(sub);
+        log.info("Subscription cancelled by admin: id={}", subscriptionId);
+    }
+
+    public List<SubscriptionCycle> getCyclesAdmin(String subscriptionId) {
+        if (!subscriptionRepository.existsById(subscriptionId)) {
+            throw new IllegalArgumentException("Subscription not found: " + subscriptionId);
+        }
+        return cycleRepository.findBySubscriptionIdOrderByCycleNumberDesc(subscriptionId);
+    }
+
     // ── Helpers ──────────────────────────────────────────────────────────────
 
     private LocalDate computeNextBillingDate(LocalDate current, SubscriptionCadence cadence) {
