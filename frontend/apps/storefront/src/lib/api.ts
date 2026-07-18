@@ -6,7 +6,21 @@ const client = axios.create({
   timeout: 10000,
 });
 
-// Request interceptor: attach JWT from localStorage (only if token exists)
+let isRefreshing = false;
+let failedQueue: Array<{
+  resolve: (token: string) => void;
+  reject: (err: unknown) => void;
+}> = [];
+
+function processQueue(error: unknown, token: string | null) {
+  failedQueue.forEach(({ resolve, reject }) => {
+    if (error) reject(error);
+    else resolve(token!);
+  });
+  failedQueue = [];
+}
+
+// Request interceptor: attach JWT from localStorage
 client.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {
     const token = localStorage.getItem("token");
@@ -17,11 +31,65 @@ client.interceptors.request.use((config) => {
   return config;
 });
 
-// Response interceptor: unwrap ApiResponse { success, message, data } -> return data
+// Response interceptor: unwrap ApiResponse + handle 401 with token refresh
 client.interceptors.response.use(
   (response) => response.data.data,
-  (error) => {
-    if (error.response?.status === 401 && typeof window !== "undefined") {
+  async (error) => {
+    const originalRequest = error.config;
+
+    // Attempt token refresh on 401 (only once, not on login/refresh endpoints)
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      !originalRequest.url?.includes("/identity/login") &&
+      !originalRequest.url?.includes("/identity/refresh") &&
+      typeof window !== "undefined"
+    ) {
+      const refreshToken = localStorage.getItem("refreshToken");
+      if (!refreshToken) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("refreshToken");
+        window.location.href = "/account/login";
+        return Promise.reject(new Error("Session expired. Please log in again."));
+      }
+
+      if (isRefreshing) {
+        // Queue this request until the refresh completes
+        return new Promise<string>((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        }).then((token) => {
+          originalRequest.headers.Authorization = `Bearer ${token}`;
+          return client(originalRequest);
+        });
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      try {
+        const res = await axios.post(
+          `${process.env.NEXT_PUBLIC_GATEWAY_URL}/api/v1/identity/refresh`,
+          { refreshToken }
+        );
+        const { accessToken, refreshToken: newRefreshToken } = res.data.data;
+        localStorage.setItem("token", accessToken);
+        if (newRefreshToken) localStorage.setItem("refreshToken", newRefreshToken);
+        client.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
+        processQueue(null, accessToken);
+        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+        return client(originalRequest);
+      } catch (refreshError) {
+        processQueue(refreshError, null);
+        localStorage.removeItem("token");
+        localStorage.removeItem("refreshToken");
+        window.location.href = "/account/login";
+        return Promise.reject(new Error("Session expired. Please log in again."));
+      } finally {
+        isRefreshing = false;
+      }
+    }
+
+    if (error.response?.status === 401) {
       localStorage.removeItem("token");
       localStorage.removeItem("refreshToken");
       window.location.href = "/account/login";
@@ -39,7 +107,6 @@ client.interceptors.response.use(
   }
 );
 
-// ponytail: typed wrapper — interceptor unwraps at runtime; this types the unwrap
 const api = {
   get<T>(url: string, config?: Parameters<typeof client.get>[1]): Promise<T> {
     return client.get(url, config) as unknown as Promise<T>;

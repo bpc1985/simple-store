@@ -17,6 +17,10 @@
     "typecheck": {
       "dependsOn": ["^typecheck"],
       "inputs": ["src/**", "tsconfig.json"]
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "inputs": ["src/**", "vitest.config.*", "vitest.setup.*"]
     }
   }
 }
