@@ -249,6 +249,28 @@ services:
       rabbitmq:
         condition: service_healthy
 
+  subscription-service:
+    build: ./subscription-service
+    ports:
+      - "8088:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/simplestore
+      SPRING_DATASOURCE_USERNAME: simplestore
+      SPRING_DATASOURCE_PASSWORD: simplestore
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_USERNAME: simplestore
+      SPRING_RABBITMQ_PASSWORD: simplestore
+      JWT_SECRET: c2ltcGxlLXN0b3JlLXNlY3JldC1rZXktZm9yLWp3dC10b2tlbnMtc2hhcmVkLWFjcm9zcy1zZXJ2aWNlcw==
+      ELASTIC_APM_SERVICE_NAME: subscription-service
+      ELASTIC_APM_SERVER_URL: http://apm-server:8200
+      ELASTIC_APM_APPLICATION_PACKAGES: com.simplestore
+      LOGSTASH_HOST: logstash
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
   gateway:
     build: ./gateway
     ports:
@@ -266,6 +288,7 @@ services:
       - order-service
       - inventory-service
       - payment-service
+      - subscription-service
 
   storefront-web:
     build: ./storefront-web

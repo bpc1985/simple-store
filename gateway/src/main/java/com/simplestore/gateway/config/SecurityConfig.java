@@ -64,6 +64,7 @@ public class SecurityConfig {
                 .pathMatchers(HttpMethod.GET, "/api/v1/catalog/products/**").permitAll()
                 .pathMatchers(HttpMethod.GET, "/api/v1/catalog/categories/**").permitAll()
                 .pathMatchers("/api/v1/cart/**").permitAll()
+                .pathMatchers(HttpMethod.GET, "/api/v1/subscription/plans/**").permitAll()
                 // CORS preflight - OPTIONS must be permitted before auth
                 .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 // All other endpoints require authentication

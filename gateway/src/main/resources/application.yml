@@ -27,6 +27,10 @@ spring:
         uri: http://payment-service:8080
         predicates:
           - Path=/api/v1/payment/**
+      - id: subscription-service
+        uri: http://subscription-service:8080
+        predicates:
+          - Path=/api/v1/subscription/**
     default-filters:
       - DedupeResponseHeader=Access-Control-Allow-Credential Access-Control-Allow-Origin
     globalcors:
@@ -54,6 +58,8 @@ springdoc:
         url: /api/v1/inventory/api-docs
       - name: payment
         url: /api/v1/payment/api-docs
+      - name: subscription
+        url: /api/v1/subscription/api-docs
 
 
 logstash.host: ${LOGSTASH_HOST:localhost}

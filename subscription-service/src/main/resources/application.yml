@@ -1,7 +1,7 @@
 server.port: 8080
 
 spring:
-  application.name: payment-service
+  application.name: subscription-service
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/simplestore}
     username: ${SPRING_DATASOURCE_USERNAME:simplestore}
@@ -11,18 +11,23 @@ spring:
     show-sql: false
     properties.hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect
   cloud.stream:
-    function.definition: processPaymentConsumer;subscriptionCycleChargeConsumer
+    function.definition: subscriptionCycleStartedConsumer;paymentSuccessConsumer;paymentFailureConsumer
     bindings:
-      processPaymentConsumer-in-0:
-        destination: process-payment-requested
-        group: payment-service
-      subscriptionCycleChargeConsumer-in-0:
+      subscriptionCycleStartedConsumer-in-0:
         destination: subscription-cycle-started
-        group: payment-service
+        group: subscription-service
+      paymentSuccessConsumer-in-0:
+        destination: subscription-payment-success
+        group: subscription-service
+      paymentFailureConsumer-in-0:
+        destination: subscription-payment-failure
+        group: subscription-service
     rabbit.bindings:
-      processPaymentConsumer-in-0.consumer:
+      subscriptionCycleStartedConsumer-in-0.consumer:
         exchangeType: fanout
-      subscriptionCycleChargeConsumer-in-0.consumer:
+      paymentSuccessConsumer-in-0.consumer:
+        exchangeType: fanout
+      paymentFailureConsumer-in-0.consumer:
         exchangeType: fanout
   security.oauth2.resourceserver.jwt:
     issuer-uri: http://identity-service:8080
@@ -32,12 +37,11 @@ jwt.secret: ${JWT_SECRET:c2ltcGxlLXN0b3JlLXNlY3JldC1rZXktZm9yLWp3dC10b2tlbnMtc2h
 
 springdoc:
   api-docs:
-    path: /api/v1/payment/api-docs
+    path: /api/v1/subscription/api-docs
   swagger-ui:
-    path: /api/v1/payment/swagger-ui.html
+    path: /api/v1/subscription/swagger-ui.html
     tags-sorter: alpha
     operations-sorter: alpha
-
 
 logstash.host: ${LOGSTASH_HOST:localhost}
 
