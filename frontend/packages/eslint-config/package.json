@@ -1,0 +1,14 @@
+{
+  "name": "@simplestore/eslint-config",
+  "version": "1.0.0",
+  "private": true,
+  "license": "MIT",
+  "exports": {
+    "./nextjs": "./nextjs.mjs"
+  },
+  "devDependencies": {
+    "eslint": "^9",
+    "eslint-config-next": "16.2.10",
+    "next": "16.2.10"
+  }
+}
