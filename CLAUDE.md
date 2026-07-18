@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-SimpleStore — Spring Boot 3.4 microservices e-commerce reference architecture (Java 21), ported from a .NET project. Maven multi-module: 1 shared lib + 1 gateway + 7 backend services + 2 Thymeleaf BFFs. Backed by PostgreSQL, Redis, RabbitMQ, and an ELK observability stack, all via Docker Compose.
+SimpleStore — Spring Boot 3.4 microservices e-commerce reference architecture (Java 21), ported from a .NET project. Maven multi-module: 1 shared lib + 1 gateway + 8 backend services. Backed by PostgreSQL, Redis, RabbitMQ, and an ELK observability stack, all via Docker Compose.
 
 ## Commands
 
@@ -34,11 +34,11 @@ docker compose down -v && docker compose up --build -d
 
 ### Running single modules
 
-Each backend service is a standard `spring-boot:run` app. Module names (Maven artifact dirs): `common`, `gateway`, `identity-service`, `catalog-service`, `cart-service`, `order-service`, `inventory-service`, `checkout-service`, `payment-service`, `storefront-web`, `admin-web`.
+Each backend service is a standard `spring-boot:run` app. Module names (Maven artifact dirs): `common`, `gateway`, `identity-service`, `catalog-service`, `cart-service`, `order-service`, `inventory-service`, `checkout-service`, `payment-service`, `subscription-service`.
 
 ### Tests
 
-**No test sources exist** — `src/test` is empty across all 11 modules. This is a reference/demo project. When adding tests, follow Spring Boot conventions (`@SpringBootTest`, Testcontainers from the parent POM's `testcontainers.version`). Run with `mvn test` or `mvn -pl <module> test`.
+**No test sources exist** — `src/test` is empty across all 10 modules. This is a reference/demo project. When adding tests, follow Spring Boot conventions (`@SpringBootTest`, Testcontainers from the parent POM's `testcontainers.version`). Run with `mvn test` or `mvn -pl <module> test`.
 
 ## Ports and access
 
@@ -52,8 +52,7 @@ Each backend service is a standard `spring-boot:run` app. Module names (Maven ar
 | inventory-service | 8080 | 8085 | PostgreSQL |
 | checkout-service | 8080 | 8086 | PostgreSQL |
 | payment-service | 8080 | 8087 | PostgreSQL |
-| storefront-web | 8080 | 8090 | — |
-| admin-web | 8080 | 8091 | — |
+| subscription-service | 8080 | 8088 | PostgreSQL |
 
 In Docker, every service listens on container port 8080 and is mapped to a unique host port. Locally (`spring-boot:run`), the service's own `application.yml` sets `server.port` to its host port (e.g. catalog=8082, checkout=8083). **Note:** checkout-service's `application.yml` says `server.port: 8083` but README maps it to 8086 — in Docker the compose port mapping wins; locally it boots on 8083. Check the service's yml before assuming a port.
 
@@ -68,12 +67,9 @@ Seeded users: admin `admin@store.com` / `Admin123!`, user1 `user1@store.com` / `
 ### Request path — gateway is the only public API entry
 
 ```
-Browser → storefront-web/admin-web (Thymeleaf BFF)
-        → gateway (8080, Spring Cloud Gateway, validates JWT)
-        → backend service (catalog/order/cart/inventory/payment/identity)
+Client → gateway (8080, Spring Cloud Gateway, validates JWT)
+       → backend service (catalog/order/cart/inventory/payment/identity/subscription)
 ```
-
-The two web apps are **Backend-For-Frontend** shells: Thymeleaf server-rendered, no business logic. They call the gateway over HTTP using `RestTemplate` + `GatewayAuthInterceptor`, which attaches the user's JWT (kept in the server-side session) as a `Bearer` header on each outbound call. Any new web-facing page goes through a `*ClientService` in the web module, not directly to a backend.
 
 ### Gateway routes + auth
 
@@ -181,17 +177,6 @@ The `version: '3.9'` line triggers a deprecation warning. Can be removed — Doc
 ### Consumer bean naming collision
 
 A class annotated `@Component` with a `@Bean` method whose name matches the default class bean name causes "A bean with that name has already been defined". Solution: either implement `Consumer<T>` directly (no `@Bean` method), or ensure `@Bean` method names differ from the class-derived bean name (checkout pattern).
-
-### Web app pattern — BFF + session auth
-
-The two Thymeleaf web apps (`storefront-web`, `admin-web`) are Backend-For-Frontend shells:
-- Controllers use `@Controller` (not `@RestController`), return Thymeleaf view names
-- All backend calls go through `*ClientService` classes that use `RestClient` configured with `GatewayAuthInterceptor`
-- `GatewayAuthInterceptor` pulls `accessToken` from the HTTP session and attaches it as `Bearer` on every outbound call
-- Login stores the JWT in the session; logout invalidates the session
-- `AuthStatusInterceptor` (storefront) sets `authenticated` model attribute for nav toggle
-- `AdminController.login()` handles login directly — `formLogin()` MUST be disabled in SecurityConfig or Spring Security intercepts POST before controller
-- Dependencies: `spring-boot-starter-thymeleaf`, `thymeleaf-layout-dialect` (for `layout:decorate`), `thymeleaf-extras-java8time` (for `#temporals` in templates)
 
 ### Swagger aggregation
 

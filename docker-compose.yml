@@ -290,24 +290,6 @@ services:
       - payment-service
       - subscription-service
 
-  storefront-web:
-    build: ./storefront-web
-    ports:
-      - "8090:8080"
-    environment:
-      GATEWAY_URL: http://gateway:8080
-    depends_on:
-      - gateway
-
-  admin-web:
-    build: ./admin-web
-    ports:
-      - "8091:8081"
-    environment:
-      GATEWAY_URL: http://gateway:8080
-    depends_on:
-      - gateway
-
 volumes:
   pgdata:
   esdata:

@@ -1,6 +1,6 @@
 # SimpleStore — Spring Boot 3 Microservices
 
-A **production-grade microservices reference architecture** built with **Spring Boot 3.4**, **Spring Cloud**, **Spring Data JPA**, **PostgreSQL**, **Redis**, **RabbitMQ**, and **Thymeleaf**.
+A **production-grade microservices reference architecture** built with **Spring Boot 3.4**, **Spring Cloud**, **Spring Data JPA**, **PostgreSQL**, **Redis**, and **RabbitMQ**.
 
 > **Based on:** The .NET SimpleStore by [daohainam](https://github.com/daohainam/simple-store), ported to Java Spring Boot 3.
 
@@ -13,10 +13,10 @@ A **production-grade microservices reference architecture** built with **Spring 
 └──────────────────────────────────────────────────────────────┘
         │                    │                    │
         ▼                    ▼                    ▼
-┌──────────────┐   ┌──────────────────┐   ┌────────────────┐
-│   Gateway    │◄──│  Storefront Web  │   │   Admin Web    │
-│ (SC Gateway  │◄──│  (Thymeleaf BFF) │   │ (Thymeleaf BFF)│
-│   + JWT)     │   └──────────────────┘   └────────────────┘
+┌──────────────┐   ┌──────────────┐   ┌──────────────┐
+│   Gateway    │   │  Identity    │   │   Catalog    │
+│ (SC Gateway  │   │  Service     │   │   Service    │
+│   + JWT)     │   └──────────────┘   └──────────────┘
 └──────┬───────┘
        │ Routes /api/v1/<service>/*
        │
@@ -59,11 +59,10 @@ OrderSubmitted → RESERVING_STOCK → StockReserved → PROCESSING_PAYMENT
 | **order-service** | 8084 | PostgreSQL | Order creation & management |
 | **inventory-service** | 8085 | PostgreSQL | Stock levels + CQRS reservations |
 | **checkout-service** | 8086\* | PostgreSQL | Saga orchestrator (event-driven only, no HTTP) |
+| **payment-service** | 8087 | PostgreSQL | Payment accounts & transactions |
+| **subscription-service** | 8088 | PostgreSQL | Subscription plans & recurring billing |
 
 > \* Checkout's `application.yml` sets `server.port: 8083`. Docker compose maps to 8086. When running locally with `spring-boot:run`, checkout boots on **8083**, not 8086.
-| **payment-service** | 8087 | PostgreSQL | Payment accounts & transactions |
-| **storefront-web** | 8090 | — | Customer storefront (Thymeleaf BFF) |
-| **admin-web** | 8091 | — | Admin dashboard (Thymeleaf BFF) |
 
 ## Tech Stack
 
@@ -76,7 +75,6 @@ OrderSubmitted → RESERVING_STOCK → StockReserved → PROCESSING_PAYMENT
 | Messaging | RabbitMQ 4 + Spring Cloud Stream |
 | Gateway | Spring Cloud Gateway |
 | Security | Spring Security + OAuth2 JWT |
-| Frontend | Thymeleaf |
 | Build | Maven 3.9+ |
 | Container | Docker Compose |
 
@@ -103,7 +101,7 @@ cd simple-store
 # 1. Build all JARs
 mvn clean install -DskipTests
 
-# 2. Start infrastructure + all 10 services
+# 2. Start infrastructure + all services
 # IMPORTANT: --build is REQUIRED to pick up new JARs after any mvn install
 docker-compose up --build -d
 
@@ -119,8 +117,6 @@ docker-compose logs -f catalog-service   # single service
 
 | App | URL | Description |
 |-----|-----|-------------|
-| Storefront | http://localhost:8090 | Customer shopping site |
-| Admin Dashboard | http://localhost:8091 | Admin management panel |
 | Gateway (API) | http://localhost:8080 | API entry point |
 | RabbitMQ Management | http://localhost:15672 | Message broker UI (`simplestore` / `simplestore`) |
 | Kibana (ELK) | http://localhost:5601 | Observability: logs, metrics, traces |
@@ -167,8 +163,6 @@ mvn -pl inventory-service spring-boot:run    # Terminal 5 — port 8085
 mvn -pl checkout-service spring-boot:run     # Terminal 6 — port 8083 (note: yml uses 8083, Docker maps to 8086)
 mvn -pl payment-service spring-boot:run      # Terminal 7 — port 8087
 mvn -pl gateway spring-boot:run              # Terminal 8 — port 8080
-mvn -pl storefront-web spring-boot:run       # Terminal 9 — port 8090
-mvn -pl admin-web spring-boot:run            # Terminal 10 — port 8091
 ```
 
 Or use `tmux` / `screen` to manage multiple terminals.
@@ -273,10 +267,6 @@ Seeded automatically on first startup:
 | User 2 | `user2@store.com` | `User123!` |
 | User 3 | `user3@store.com` | `User123!` |
 
-**Web apps:**
-- **Storefront:** http://localhost:8090 — browse products, register/login, add to cart, checkout
-- **Admin Dashboard:** http://localhost:8091/admin/login — manage products, categories, orders, users, inventory
-
 ## Observability — ELK Stack
 
 The project ships with full **Logs, Metrics, and Traces** via the ELK stack:
@@ -348,8 +338,7 @@ simple-store/
 ├── inventory-service/      # Stock (CQRS)
 ├── checkout-service/       # Saga orchestrator
 ├── payment-service/        # Payments
-├── storefront-web/         # Customer UI
-└── admin-web/              # Admin dashboard
+└── subscription-service/   # Subscriptions & billing
 ```
 
 ## Events

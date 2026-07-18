@@ -29,8 +29,6 @@
         <module>checkout-service</module>
         <module>payment-service</module>
         <module>subscription-service</module>
-        <module>storefront-web</module>
-        <module>admin-web</module>
     </modules>
 
     <properties>
