@@ -43,7 +43,7 @@ export default function EditPlanPage() {
     setValue,
     watch,
     formState: { errors, isSubmitting },
-  } = useForm<PlanForm>({
+  } = useForm({
     resolver: zodResolver(planSchema),
     values: plan
       ? {

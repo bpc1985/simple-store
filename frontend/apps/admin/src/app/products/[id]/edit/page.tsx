@@ -45,7 +45,7 @@ export default function EditProductPage() {
     reset,
     watch,
     formState: { errors, isSubmitting },
-  } = useForm<ProductForm>({ resolver: zodResolver(productSchema) });
+  } = useForm({ resolver: zodResolver(productSchema) });
 
   const selectedCategoryId = watch("categoryId");
   const selectedCategoryName = categories?.find((c) => c.id === selectedCategoryId)?.name;

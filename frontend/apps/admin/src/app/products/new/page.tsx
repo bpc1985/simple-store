@@ -39,7 +39,7 @@ export default function NewProductPage() {
     setValue,
     watch,
     formState: { errors, isSubmitting },
-  } = useForm<ProductForm>({
+  } = useForm({
     resolver: zodResolver(productSchema),
     defaultValues: { stock: 0 },
   });

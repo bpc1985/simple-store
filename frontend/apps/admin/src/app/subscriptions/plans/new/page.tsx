@@ -37,7 +37,7 @@ export default function NewPlanPage() {
     setValue,
     watch,
     formState: { errors, isSubmitting },
-  } = useForm<PlanForm>({
+  } = useForm({
     resolver: zodResolver(planSchema),
     defaultValues: { cadence: "MONTHLY" },
   });
