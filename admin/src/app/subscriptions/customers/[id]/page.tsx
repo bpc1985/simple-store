@@ -86,7 +86,7 @@ export default function SubscriptionDetailPage() {
   const [showCancel, setShowCancel] = useState(false);
 
   const { data: sub, isLoading } = useSubscription(id);
-  const { data: cycles, isLoading: cyclesLoading } = useCycles(id);
+  const { data: cycles, isLoading: cyclesLoading } = useCycles(sub ? id : "");
   const cancelSubscription = useCancelSubscription();
 
   if (isLoading) {

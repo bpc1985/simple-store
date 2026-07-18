@@ -70,7 +70,9 @@ export default function CheckoutPage() {
       { shippingAddress, items },
       {
         onSuccess: (data: { id?: number }) => {
-          clearCart.mutate();
+          clearCart.mutate(undefined, {
+            onError: () => toast.error("Order placed, but cart could not be cleared. Please clear it manually."),
+          });
           setConfirmedOrderId(data.id ?? null);
           setStep("Confirmation");
           toast.success("Order placed successfully!");

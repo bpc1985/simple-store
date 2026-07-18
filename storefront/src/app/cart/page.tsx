@@ -14,7 +14,7 @@ import { ShoppingCart, Trash2, ArrowRight, ShieldCheck, Truck, RotateCcw } from 
 import { toast } from "sonner";
 
 export default function CartPage() {
-  const { data: cartData, isLoading } = useCart();
+  const { data: cartData, isLoading, isError } = useCart();
   const removeItem = useRemoveCartItem();
   const updateItem = useUpdateCartItem();
   const addToCart = useAddToCart();
@@ -66,6 +66,20 @@ export default function CartPage() {
           </div>
           <Skeleton className="h-48 rounded-xl" />
         </div>
+      </div>
+    );
+  }
+
+  // ── Error ──
+  if (isError) {
+    return (
+      <div className="max-w-4xl mx-auto">
+        <EmptyState
+          icon={ShoppingCart}
+          title="Failed to load cart"
+          description="Check your connection and try again."
+          action={{ label: "Retry", href: "/cart" }}
+        />
       </div>
     );
   }

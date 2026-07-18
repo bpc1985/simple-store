@@ -6,14 +6,14 @@ import * as orderService from "@/services/order-service";
 
 export function useOrders(page: number) {
   return useQuery({
-    queryKey: ["orders", page],
+    queryKey: ["orders", "list", page],
     queryFn: () => orderService.getOrders(page),
   });
 }
 
 export function useOrder(id: number) {
   return useQuery({
-    queryKey: ["orders", id],
+    queryKey: ["orders", "detail", id],
     queryFn: () => orderService.getOrder(id),
     enabled: !!id,
   });

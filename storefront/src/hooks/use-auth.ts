@@ -8,9 +8,7 @@ export function useLogin() {
   return useMutation({
     mutationFn: ({ email, password }: { email: string; password: string }) =>
       identityService.login(email, password),
-    onSuccess: (data) => {
-      localStorage.setItem("token", data.accessToken);
-      localStorage.setItem("refreshToken", data.refreshToken);
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["me"] });
     },
   });
@@ -28,9 +26,7 @@ export function useRegister() {
       password: string;
       fullName: string;
     }) => identityService.register(email, password, fullName),
-    onSuccess: (data) => {
-      localStorage.setItem("token", data.accessToken);
-      localStorage.setItem("refreshToken", data.refreshToken);
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["me"] });
     },
   });

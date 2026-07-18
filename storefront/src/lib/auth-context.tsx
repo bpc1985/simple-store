@@ -15,7 +15,7 @@ interface AuthContextType {
   user: UserDto | undefined;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (token: string) => void;
+  login: (accessToken: string, refreshToken?: string) => void;
   logout: () => void;
 }
 
@@ -39,9 +39,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const { data: user, isLoading } = useMe();
 
-  const login = useCallback((t: string) => {
-    localStorage.setItem("token", t);
-    setToken(t);
+  const login = useCallback((accessToken: string, refreshToken?: string) => {
+    localStorage.setItem("token", accessToken);
+    if (refreshToken) localStorage.setItem("refreshToken", refreshToken);
+    setToken(accessToken);
   }, []);
 
   const logout = useCallback(() => {

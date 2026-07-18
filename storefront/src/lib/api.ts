@@ -21,6 +21,12 @@ client.interceptors.request.use((config) => {
 client.interceptors.response.use(
   (response) => response.data.data,
   (error) => {
+    if (error.response?.status === 401 && typeof window !== "undefined") {
+      localStorage.removeItem("token");
+      localStorage.removeItem("refreshToken");
+      window.location.href = "/account/login";
+      return Promise.reject(new Error("Session expired. Please log in again."));
+    }
     if (error.code === "ECONNABORTED") {
       return Promise.reject(new Error("Request timed out. Please try again."));
     }

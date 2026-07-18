@@ -6,6 +6,15 @@ export async function login(email: string, password: string): Promise<TokenRespo
   return data;
 }
 
+export async function getMe(): Promise<User> {
+  const { data } = await api.get<User>("/api/v1/identity/me");
+  return data;
+}
+
+export async function logout(refreshToken: string): Promise<void> {
+  await api.post("/api/v1/identity/logout", { refreshToken });
+}
+
 export async function getUsers(page = 0): Promise<PagedResult<User>> {
   const { data } = await api.get<PagedResult<User>>("/api/v1/identity/admin/users", { params: { page } });
   return data;

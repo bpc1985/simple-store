@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import * as catalogService from "@/services/catalog-service";
 
 export function useProducts(
@@ -11,7 +11,7 @@ export function useProducts(
   return useQuery({
     queryKey: ["products", page, categoryId, search],
     queryFn: () => catalogService.getProducts(page, categoryId, search),
-    placeholderData: keepPreviousData,
+    placeholderData: (prev) => prev,
     staleTime: 60 * 1000,
   });
 }

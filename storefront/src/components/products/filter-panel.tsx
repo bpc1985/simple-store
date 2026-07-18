@@ -81,10 +81,14 @@ export default function FilterPanel({
   const isCollapsed = (section: Section) => collapsed.has(section);
 
   const applyPrice = () => {
+    const min = localMin ? parseFloat(localMin) : undefined;
+    const max = localMax ? parseFloat(localMax) : undefined;
+    if (min !== undefined && isNaN(min)) return;
+    if (max !== undefined && isNaN(max)) return;
     onChange({
       ...activeFilters,
-      minPrice: localMin ? parseFloat(localMin) : undefined,
-      maxPrice: localMax ? parseFloat(localMax) : undefined,
+      minPrice: min,
+      maxPrice: max,
     });
   };
 

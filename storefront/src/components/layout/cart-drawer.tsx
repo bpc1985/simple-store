@@ -6,7 +6,7 @@ import {
   useRemoveCartItem,
   useUpdateCartItem,
 } from "@/hooks/use-cart";
-import { useEffect } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
@@ -22,7 +22,7 @@ import StyledLink from "@/components/ui/styled-link";
 
 export default function CartDrawer() {
   const { cartOpen, closeCart, setItemCount } = useCartContext();
-  const { data: cartData, isLoading } = useCart();
+  const { data: cartData, isLoading, isError } = useCart();
   const removeItem = useRemoveCartItem();
   const updateItem = useUpdateCartItem();
 
@@ -41,15 +41,55 @@ export default function CartDrawer() {
     });
   };
 
-  const handleQuantityChange = (productId: number, quantity: number) => {
+  const handleQuantityChange = useCallback((productId: number, quantity: number) => {
     if (quantity < 1) return;
     updateItem.mutate(
       { productId, quantity },
-      {
-        onError: err => toast.error(err.message),
-      },
+      { onError: err => toast.error(err.message) },
     );
-  };
+  }, [updateItem]);
+
+  // Debounced quantity input to avoid API calls on every keystroke
+  function DebouncedQuantityInput({
+    productId,
+    initialValue,
+  }: {
+    productId: number;
+    initialValue: number;
+  }) {
+    const [localValue, setLocalValue] = useState(String(initialValue));
+    const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+    useEffect(() => {
+      setLocalValue(String(initialValue));
+    }, [initialValue]);
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const raw = e.target.value;
+      setLocalValue(raw);
+      const num = parseInt(raw);
+      if (!isNaN(num) && num >= 1) {
+        clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+          handleQuantityChange(productId, num);
+        }, 400);
+      }
+    };
+
+    useEffect(() => {
+      return () => clearTimeout(timerRef.current);
+    }, []);
+
+    return (
+      <Input
+        type="number"
+        min={1}
+        value={localValue}
+        onChange={handleChange}
+        className="h-7 w-16 text-xs text-center"
+      />
+    );
+  }
 
   return (
     <Sheet open={cartOpen} onOpenChange={open => !open && closeCart()}>
@@ -64,6 +104,14 @@ export default function CartDrawer() {
         {isLoading ? (
           <div className="flex-1 flex items-center justify-center">
             <p className="text-sm text-muted-foreground">Loading...</p>
+          </div>
+        ) : isError ? (
+          <div className="flex flex-col items-center justify-center gap-3">
+            <ShoppingCart className="size-12 text-muted-foreground/40" />
+            <p className="text-sm text-muted-foreground">Failed to load cart</p>
+            <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
+              Retry
+            </Button>
           </div>
         ) : !cartData?.items?.length ? (
           <div className="flex flex-col items-center justify-center gap-3">
@@ -100,17 +148,9 @@ export default function CartDrawer() {
                       ${item.price.toFixed(2)}
                     </p>
                     <div className="flex items-center gap-2 mt-1">
-                      <Input
-                        type="number"
-                        min={1}
-                        value={item.quantity}
-                        onChange={e =>
-                          handleQuantityChange(
-                            item.productId,
-                            parseInt(e.target.value) || 1,
-                          )
-                        }
-                        className="h-7 w-16 text-xs text-center"
+                      <DebouncedQuantityInput
+                        productId={item.productId}
+                        initialValue={item.quantity}
                       />
                       <Button
                         variant="ghost"

@@ -12,6 +12,15 @@ export function useSubscriptionPlans() {
   });
 }
 
+export function useSubscriptionPlan(id: string) {
+  return useQuery({
+    queryKey: ["subscription-plans", id],
+    queryFn: () => subscriptionService.getPlan(id),
+    enabled: !!id,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
 export function useSubscribe() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -28,6 +37,15 @@ export function useMySubscriptions() {
     queryKey: ["my-subscriptions"],
     queryFn: subscriptionService.getMySubscriptions,
     enabled: isAuthenticated,
+  });
+}
+
+export function useSubscription(id: string) {
+  const { isAuthenticated } = useAuth();
+  return useQuery({
+    queryKey: ["my-subscriptions", id],
+    queryFn: () => subscriptionService.getMySubscription(id),
+    enabled: isAuthenticated && !!id,
   });
 }
 

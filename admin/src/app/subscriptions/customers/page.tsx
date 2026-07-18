@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useSubscriptions } from "@/hooks/use-subscriptions";
 import { Badge } from "@/components/ui/badge";
@@ -50,12 +50,22 @@ function formatCurrency(n: number) {
 export default function CustomerSubscriptionsPage() {
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [userIdFilter, setUserIdFilter] = useState("");
+  const [debouncedUserId, setDebouncedUserId] = useState("");
+  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  useEffect(() => {
+    clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      setDebouncedUserId(userIdFilter);
+    }, 300);
+    return () => clearTimeout(timerRef.current);
+  }, [userIdFilter]);
 
   const { data: subscriptions, isLoading } = useSubscriptions(
-    userIdFilter || statusFilter
+    debouncedUserId || statusFilter
       ? {
           ...(statusFilter ? { status: statusFilter } : {}),
-          ...(userIdFilter ? { userId: userIdFilter } : {}),
+          ...(debouncedUserId ? { userId: debouncedUserId } : {}),
         }
       : undefined
   );

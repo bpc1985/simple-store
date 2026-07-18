@@ -6,6 +6,8 @@ import { TOKEN_KEY } from "@/lib/api";
 import * as identityService from "@/services/identity-service";
 import { TokenResponse } from "@/types";
 
+const REFRESH_KEY = "admin-refresh-token";
+
 interface AuthContextType {
   token: string | null;
   isAuthenticated: boolean;
@@ -29,12 +31,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback(async (email: string, password: string) => {
     const data = await identityService.login(email, password);
     localStorage.setItem(TOKEN_KEY, data.accessToken);
+    localStorage.setItem(REFRESH_KEY, data.refreshToken);
     setToken(data.accessToken);
     return data;
   }, []);
 
   const logout = useCallback(() => {
+    const refreshToken = localStorage.getItem(REFRESH_KEY);
+    if (refreshToken) {
+      identityService.logout(refreshToken).catch(() => {});
+    }
     localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(REFRESH_KEY);
     setToken(null);
     router.push("/login");
   }, [router]);

@@ -49,8 +49,7 @@ export default function RegisterForm() {
       },
       {
         onSuccess: (res) => {
-          auth.login(res.accessToken);
-          localStorage.setItem("refreshToken", res.refreshToken);
+          auth.login(res.accessToken, res.refreshToken);
           toast.success("Account created successfully");
           router.push("/");
         },

@@ -7,14 +7,14 @@ import { Product } from "@/types";
 
 export function useProducts(page: number) {
   return useQuery({
-    queryKey: ["products", page],
+    queryKey: ["products", "list", page],
     queryFn: () => catalogService.getProducts(page),
   });
 }
 
 export function useProduct(id: number) {
   return useQuery({
-    queryKey: ["products", id],
+    queryKey: ["products", "detail", id],
     queryFn: () => catalogService.getProduct(id),
     enabled: !!id,
   });

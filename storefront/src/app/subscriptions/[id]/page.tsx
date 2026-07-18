@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { useState } from "react";
-import { useSubscriptionPlans } from "@/hooks/use-subscriptions";
+import { useSubscriptionPlan } from "@/hooks/use-subscriptions";
 import { useAuth } from "@/lib/auth-context";
 import SubscribeDialog from "@/components/subscriptions/subscribe-dialog";
 import PageHeader from "@/components/ui/page-header";
@@ -28,13 +28,9 @@ const cadenceMeta: Record<string, { label: string; icon: typeof CalendarDays }> 
 
 export default function PlanDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const { data: plans, isLoading, error } = useSubscriptionPlans();
+  const { data: plan, isLoading, error } = useSubscriptionPlan(id);
   const { isAuthenticated } = useAuth();
   const [dialogOpen, setDialogOpen] = useState(false);
-
-  const plan: SubscriptionPlan | undefined = plans?.find(
-    (p) => p.id === Number(id)
-  );
 
   if (isLoading) {
     return (

@@ -39,6 +39,7 @@ function breadcrumbFromPathname(pathname: string): { label: string; href: string
 export function Header({ onMenuClick }: HeaderProps) {
   const pathname = usePathname();
   const logout = useLogout();
+  const handleLogout = () => logout.mutate();
   const crumbs = breadcrumbFromPathname(pathname);
 
   return (
@@ -79,7 +80,7 @@ export function Header({ onMenuClick }: HeaderProps) {
       <Button
         variant="ghost"
         size="sm"
-        onClick={logout}
+        onClick={handleLogout}
         className="gap-2 text-muted-foreground hover:text-destructive"
       >
         <LogOut className="size-4" />

@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { useState } from "react";
-import { useMySubscriptions, useCycles, useCancelSubscription, usePauseSubscription, useResumeSubscription } from "@/hooks/use-subscriptions";
+import { useSubscription, useCycles, useCancelSubscription, usePauseSubscription, useResumeSubscription } from "@/hooks/use-subscriptions";
 import { useAuth } from "@/lib/auth-context";
 import StatusBadge from "@/components/subscriptions/status-badge";
 import CycleList from "@/components/subscriptions/cycle-list";
@@ -54,7 +54,7 @@ type Action = "pause" | "resume" | "cancel" | null;
 export default function SubscriptionDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
-  const { data: subscriptions, isLoading: subsLoading, error: subsError } = useMySubscriptions();
+  const { data: subscription, isLoading: subsLoading, error: subsError } = useSubscription(id);
   const { data: cycles, isLoading: cyclesLoading } = useCycles(id);
 
   const cancelMutation = useCancelSubscription();
@@ -62,8 +62,6 @@ export default function SubscriptionDetailPage() {
   const resumeMutation = useResumeSubscription();
 
   const [action, setAction] = useState<Action>(null);
-
-  const subscription: CustomerSubscription | undefined = subscriptions?.find((s) => s.id === id);
 
   // ── Loading ──
   if (authLoading || subsLoading) {

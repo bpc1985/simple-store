@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePlans, useUpdatePlan } from "@/hooks/use-subscriptions";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ function formatCurrency(n: number) {
 export default function PlansPage() {
   const { data: plans, isLoading } = usePlans();
   const updatePlan = useUpdatePlan();
+  const [updatingPlanId, setUpdatingPlanId] = useState<number | null>(null);
 
   return (
     <div className="animate-fade-in max-w-7xl">
@@ -115,12 +117,14 @@ export default function PlansPage() {
                     <div className="flex items-center gap-2">
                       <Switch
                         checked={plan.active}
-                        onCheckedChange={() =>
-                          updatePlan.mutate({
-                            id: plan.id,
-                            active: !plan.active,
-                          })
-                        }
+                        disabled={updatingPlanId === plan.id}
+                        onCheckedChange={() => {
+                          setUpdatingPlanId(plan.id);
+                          updatePlan.mutate(
+                            { id: plan.id, active: !plan.active },
+                            { onSettled: () => setUpdatingPlanId(null) }
+                          );
+                        }}
                       />
                       <Badge
                         variant={plan.active ? "default" : "secondary"}

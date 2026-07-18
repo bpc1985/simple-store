@@ -10,8 +10,16 @@ export async function getPlans(): Promise<SubscriptionPlan[]> {
   return api.get("/api/v1/subscription/plans");
 }
 
+export async function getPlan(id: string): Promise<SubscriptionPlan> {
+  return api.get(`/api/v1/subscription/plans/${id}`);
+}
+
 export async function getMySubscriptions(): Promise<CustomerSubscription[]> {
   return api.get("/api/v1/subscription/my");
+}
+
+export async function getMySubscription(id: string): Promise<CustomerSubscription> {
+  return api.get(`/api/v1/subscription/my/${id}`);
 }
 
 export async function subscribe(

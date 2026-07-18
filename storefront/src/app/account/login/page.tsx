@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, Suspense } from "react";
+import { useLayoutEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import LoginForm from "@/components/auth/login-form";
 import { useAuth } from "@/lib/auth-context";
@@ -11,7 +11,7 @@ function LoginContent() {
   const searchParams = useSearchParams();
   const returnUrl = searchParams.get("returnUrl") || "/";
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (isAuthenticated) router.push(returnUrl);
   }, [isAuthenticated, router, returnUrl]);
 
