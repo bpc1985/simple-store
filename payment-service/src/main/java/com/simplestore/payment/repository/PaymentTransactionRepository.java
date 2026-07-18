@@ -10,4 +10,5 @@ import java.util.UUID;
 @Repository
 public interface PaymentTransactionRepository extends JpaRepository<PaymentTransaction, UUID> {
     Optional<PaymentTransaction> findByCorrelationId(UUID correlationId);
+    boolean existsByCorrelationId(UUID correlationId);
 }

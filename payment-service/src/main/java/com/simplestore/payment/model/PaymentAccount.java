@@ -34,4 +34,7 @@ public class PaymentAccount {
 
     @Builder.Default
     private Instant updatedAt = Instant.now();
+
+    @Version
+    private Long version;
 }
