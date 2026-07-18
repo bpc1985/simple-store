@@ -259,8 +259,8 @@ Two Next.js 15 frontends live in the `frontend/` Turborepo monorepo:
 ```
 frontend/
 ├── apps/
-│   ├── storefront/    # Customer-facing SPA (port 3000)
-│   └── admin/         # Admin dashboard (port 3001)
+│   ├── storefront/    # Customer-facing SPA (port 9090)
+│   └── admin/         # Admin dashboard (port 9091)
 ├── packages/
 │   └── shared/        # Shared types + cn() utility (@simplestore/shared)
 ├── package.json       # npm workspaces config
@@ -271,8 +271,8 @@ Both use Tailwind CSS, shadcn/ui, React Query, Axios, react-hook-form + zod. Sha
 
 | App | Port | Auth | Key Features |
 |-----|------|------|-------------|
-| **storefront** | 3000 | `localStorage` token + refresh token. 401 → redirect `/account/login`. | Products, cart, checkout, orders, subscriptions, account |
-| **admin** | 3001 | `localStorage` `admin-token` key. Stores refresh token. Logout calls backend to revoke. | Dashboard, products CRUD, orders, users, inventory, subscription management |
+| **storefront** | 9090 | `localStorage` token + refresh token. 401 → redirect `/account/login`. | Products, cart, checkout, orders, subscriptions, account |
+| **admin** | 9091 | `localStorage` `admin-token` key. Stores refresh token. Logout calls backend to revoke. | Dashboard, products CRUD, orders, users, inventory, subscription management |
 
 **Commands:**
 ```bash
@@ -280,6 +280,6 @@ cd frontend && npm install             # Install all workspace deps
 cd frontend && npx turbo typecheck     # TypeScript check all apps + packages
 cd frontend && npx turbo build         # Build all apps (production)
 cd frontend && npx turbo lint          # Lint all apps
-cd frontend && npm run dev:storefront  # Dev server — storefront only (:3000)
-cd frontend && npm run dev:admin       # Dev server — admin only (:3001)
+cd frontend && npm run dev:storefront  # Dev server — storefront only (:9090)
+cd frontend && npm run dev:admin       # Dev server — admin only (:9091)
 ```

@@ -34,16 +34,16 @@ frontend/
 ├── package.json              # workspaces: ["apps/*", "packages/*"]
 ├── turbo.json                # build, dev, lint, typecheck pipeline
 ├── apps/
-│   ├── storefront/ (:3000)   # Customer SPA
-│   └── admin/ (:3001)        # Admin dashboard
+│   ├── storefront/ (:9090)   # Customer SPA
+│   └── admin/ (:9091)        # Admin dashboard
 └── packages/
     └── shared/               # @simplestore/shared — types + cn()
 ```
 
 | Package | Port | Stack | Auth |
 |---------|------|-------|------|
-| `storefront` | 3000 | Next.js 15, Tailwind, shadcn/ui, React Query, Axios | JWT in localStorage, 401 → login redirect |
-| `admin` | 3001 | Next.js 15, Tailwind, shadcn/ui, React Query, Axios, Recharts | `admin-token`, refresh token, backend logout |
+| `storefront` | 9090 | Next.js 15, Tailwind, shadcn/ui, React Query, Axios | JWT in localStorage, 401 → login redirect |
+| `admin` | 9091 | Next.js 15, Tailwind, shadcn/ui, React Query, Axios, Recharts | `admin-token`, refresh token, backend logout |
 | `@simplestore/shared` | — | TypeScript types, `cn()` (clsx + tailwind-merge) | — |
 
 TypeScript path aliases resolve `@simplestore/shared` → `../../packages/shared/src` from each app. No npm link needed; Next.js resolves via tsconfig paths.

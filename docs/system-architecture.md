@@ -7,7 +7,7 @@ SimpleStore — Spring Boot 3.4 microservices e-commerce reference architecture 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                     Frontend (Turborepo)                         │
-│       storefront (:3000)              admin (:3001)             │
+│       storefront (:9090)              admin (:9091)             │
 │  (Next.js 15 + React Query + shadcn/ui)                         │
 └─────────────────────────────┬───────────────────────────────────┘
                               │ HTTP / JWT Bearer
@@ -118,8 +118,8 @@ frontend/
 ├── package.json          # workspaces: ["apps/*", "packages/*"]
 ├── turbo.json            # build, dev, lint, typecheck pipeline
 ├── apps/
-│   ├── storefront/       # Customer SPA (port 3000)
-│   └── admin/            # Admin dashboard (port 3001)
+│   ├── storefront/       # Customer SPA (port 9090)
+│   └── admin/            # Admin dashboard (port 9091)
 └── packages/
     └── shared/           # @simplestore/shared — types, cn() utility
 ```

@@ -9,7 +9,7 @@ A **production-grade microservices reference architecture** built with **Spring 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                        Frontend (Turborepo)                      │
-│          storefront (:3000)          admin (:3001)              │
+│          storefront (:9090)          admin (:9091)              │
 │     (Next.js + React Query + shadcn/ui)                         │
 └─────────────────────────────┬───────────────────────────────────┘
                               │ HTTP / JWT Bearer
@@ -344,8 +344,8 @@ cd frontend && npm run dev:admin    # Dev server (admin)
 
 | App | Port | Description |
 |-----|------|-------------|
-| storefront | 3000 | Customer-facing SPA (products, cart, checkout, account, subscriptions) |
-| admin | 3001 | Admin dashboard (products, orders, users, inventory, subscriptions) |
+| storefront | 9090 | Customer-facing SPA (products, cart, checkout, account, subscriptions) |
+| admin | 9091 | Admin dashboard (products, orders, users, inventory, subscriptions) |
 
 Shared types and utilities live in `frontend/packages/shared/` (`@simplestore/shared`).
 
