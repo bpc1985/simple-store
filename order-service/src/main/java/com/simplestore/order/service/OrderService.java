@@ -108,13 +108,8 @@ public class OrderService {
 
     public PagedResult<OrderDto> getOrders(int page, int pageSize) {
         Page<Order> orderPage = orderRepository.findAll(PageRequest.of(page, pageSize));
-        var dtos = orderPage.getContent().stream().map(this::toOrderDto).toList();
-        PagedResult<OrderDto> result = new PagedResult<>();
-        result.setItems(dtos);
-        result.setPage(page);
-        result.setPageSize(pageSize);
-        result.setTotalCount(orderPage.getTotalElements());
-        return result;
+        return PagedResult.from(orderPage.getContent(), orderPage.getTotalElements(),
+                orderPage.getNumber(), orderPage.getSize(), this::toOrderDto);
     }
 
     public OrderDto getOrderById(Long id) {

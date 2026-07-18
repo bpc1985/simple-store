@@ -34,13 +34,7 @@ public class CatalogService {
         if (categoryId != null) pp = productRepository.findByCategoryId(categoryId, pr);
         else if (search != null && !search.isBlank()) pp = productRepository.findByNameContainingIgnoreCase(search, pr);
         else pp = productRepository.findAll(pr);
-        var dtos = pp.getContent().stream().map(this::toProductDto).toList();
-        PagedResult<ProductDto> result = new PagedResult<>();
-        result.setItems(dtos);
-        result.setPage(page);
-        result.setPageSize(pageSize);
-        result.setTotalCount(pp.getTotalElements());
-        return result;
+        return PagedResult.from(pp.getContent(), pp.getTotalElements(), pp.getNumber(), pp.getSize(), this::toProductDto);
     }
 
     public ProductDto getProductById(Long id) {
@@ -88,13 +82,7 @@ public class CatalogService {
     public PagedResult<CategoryDto> getCategories(int page, int pageSize) {
         PageRequest pr = PageRequest.of(page, pageSize);
         Page<Category> cp = categoryRepository.findAll(pr);
-        var dtos = cp.getContent().stream().map(this::toCategoryDto).toList();
-        PagedResult<CategoryDto> result = new PagedResult<>();
-        result.setItems(dtos);
-        result.setPage(page);
-        result.setPageSize(pageSize);
-        result.setTotalCount(cp.getTotalElements());
-        return result;
+        return PagedResult.from(cp.getContent(), cp.getTotalElements(), cp.getNumber(), cp.getSize(), this::toCategoryDto);
     }
 
     public CategoryDto getCategoryById(Long id) {

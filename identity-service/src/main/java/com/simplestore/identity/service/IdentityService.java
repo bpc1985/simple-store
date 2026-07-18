@@ -133,15 +133,8 @@ public class IdentityService implements UserDetailsService {
 
     public PagedResult<UserDto> getUsers(int page, int pageSize) {
         Page<ApplicationUser> userPage = userRepository.findAll(PageRequest.of(page, pageSize));
-        List<UserDto> dtos = userPage.getContent().stream()
-                .map(this::mapToDto)
-                .toList();
-        PagedResult<UserDto> result = new PagedResult<>();
-        result.setItems(dtos);
-        result.setPage(page);
-        result.setPageSize(pageSize);
-        result.setTotalCount(userPage.getTotalElements());
-        return result;
+        return PagedResult.from(userPage.getContent(), userPage.getTotalElements(),
+                userPage.getNumber(), userPage.getSize(), this::mapToDto);
     }
 
     @Transactional

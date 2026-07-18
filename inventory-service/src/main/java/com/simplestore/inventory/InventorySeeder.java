@@ -7,6 +7,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -53,13 +56,14 @@ public class InventorySeeder implements CommandLineRunner {
             60,   // 26 Puzzle 2000pc
         };
 
+        List<StockEntry> entries = new ArrayList<>();
         for (int productId = 1; productId <= stockLevels.length; productId++) {
-            StockEntry entry = StockEntry.builder()
+            entries.add(StockEntry.builder()
                     .productId(productId)
                     .stockLevel(stockLevels[productId - 1])
-                    .build();
-            stockEntryRepository.save(entry);
+                    .build());
         }
+        stockEntryRepository.saveAll(entries);
 
         log.info("Seeded {} stock entries with varied levels (15-500).", stockLevels.length);
     }

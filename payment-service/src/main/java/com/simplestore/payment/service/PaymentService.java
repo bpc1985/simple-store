@@ -25,6 +25,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.function.Function;
 
 @Service
 @RequiredArgsConstructor
@@ -198,11 +199,7 @@ public class PaymentService {
 
     public PagedResult<PaymentTransaction> getTransactions(int page, int pageSize) {
         var pageResult = paymentTransactionRepository.findAll(PageRequest.of(page, pageSize));
-        PagedResult<PaymentTransaction> result = new PagedResult<>();
-        result.setItems(pageResult.getContent());
-        result.setPage(page);
-        result.setPageSize(pageSize);
-        result.setTotalCount(pageResult.getTotalElements());
-        return result;
+        return PagedResult.from(pageResult.getContent(), pageResult.getTotalElements(),
+                pageResult.getNumber(), pageResult.getSize(), Function.identity());
     }
 }
