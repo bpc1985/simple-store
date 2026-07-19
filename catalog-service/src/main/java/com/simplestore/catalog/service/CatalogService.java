@@ -14,6 +14,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.Optional;
 
@@ -130,9 +132,17 @@ public class CatalogService {
     }
 
     private void publishProductUpdatedEvent(Product p) {
-        streamBridge.send("product-updated",
-                new ProductUpdatedEvent(p.getId(), p.getName(), p.getDescription(),
-                        p.getPrice(), p.getImageUrl(), p.getStock(), p.getCategoryId()));
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                boolean sent = streamBridge.send("product-updated",
+                        new ProductUpdatedEvent(p.getId(), p.getName(), p.getDescription(),
+                                p.getPrice(), p.getImageUrl(), p.getStock(), p.getCategoryId()));
+                if (!sent) {
+                    log.error("Failed to send product-updated event for product {}", p.getId());
+                }
+            }
+        });
     }
 }
 

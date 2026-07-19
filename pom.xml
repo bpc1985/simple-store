@@ -83,6 +83,11 @@
                 <artifactId>apm-agent-attach</artifactId>
                 <version>${elastic-apm.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.flywaydb</groupId>
+                <artifactId>flyway-database-postgresql</artifactId>
+                <version>11.3.0</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useUsers, useLockUser, useUnlockUser } from "@/hooks/use-users";
+import { Alert, AlertDescription, AlertTitle } from "@simplestore/ui";
 import { Button } from "@simplestore/ui";
 import { Skeleton } from "@simplestore/ui";
 import {
@@ -30,12 +31,28 @@ export default function UsersPage() {
     id: string;
     locked: boolean;
   } | null>(null);
-  const { data, isLoading } = useUsers(page);
+  const { data, isLoading, isError, error } = useUsers(page);
   const lockUser = useLockUser();
   const unlockUser = useUnlockUser();
   const totalPages = data
     ? Math.ceil(data.totalCount / (data.pageSize || 10))
     : 0;
+
+  if (isError) {
+    return (
+      <div className="p-6">
+        <Alert variant="destructive">
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>
+            {error instanceof Error ? error.message : "Failed to load users"}
+          </AlertDescription>
+        </Alert>
+        <Button variant="outline" className="mt-4" onClick={() => window.location.reload()}>
+          Retry
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fade-in max-w-7xl">

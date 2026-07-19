@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useStockLevels, useUpdateStockLevel } from "@/hooks/use-inventory";
+import { Alert, AlertDescription, AlertTitle } from "@simplestore/ui";
 import { Button } from "@simplestore/ui";
 import { Input } from "@simplestore/ui";
 import { Skeleton } from "@simplestore/ui";
@@ -17,12 +18,28 @@ import { ChevronLeft, ChevronRight, Warehouse, Loader2 } from "lucide-react";
 
 export default function InventoryPage() {
   const [page, setPage] = useState(0);
-  const { data, isLoading } = useStockLevels(page);
+  const { data, isLoading, isError, error } = useStockLevels(page);
   const updateStock = useUpdateStockLevel();
   const [edits, setEdits] = useState<Record<number, number>>({});
   const totalPages = data
     ? Math.ceil(data.totalCount / (data.pageSize || 10))
     : 0;
+
+  if (isError) {
+    return (
+      <div className="p-6">
+        <Alert variant="destructive">
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>
+            {error instanceof Error ? error.message : "Failed to load inventory"}
+          </AlertDescription>
+        </Alert>
+        <Button variant="outline" className="mt-4" onClick={() => window.location.reload()}>
+          Retry
+        </Button>
+      </div>
+    );
+  }
 
   const handleUpdate = (productId: number) => {
     const newLevel = edits[productId];

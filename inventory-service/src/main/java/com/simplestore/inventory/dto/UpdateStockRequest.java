@@ -1,3 +1,5 @@
 package com.simplestore.inventory.dto;
 
-public record UpdateStockRequest(int stockLevel) {}
+import jakarta.validation.constraints.PositiveOrZero;
+
+public record UpdateStockRequest(@PositiveOrZero int stockLevel) {}

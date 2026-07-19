@@ -34,7 +34,7 @@ export default function LoginForm({ returnUrl = "/" }: { returnUrl?: string }) {
   const onSubmit = (data: FormData) => {
     login.mutate(data, {
       onSuccess: (res) => {
-        auth.login(res.accessToken, res.refreshToken);
+        auth.login(res);
         toast.success("Logged in successfully");
         router.push(returnUrl);
       },

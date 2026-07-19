@@ -1,11 +1,13 @@
 package com.simplestore.subscription.service;
 
+import com.simplestore.common.event.BoxAssemblyRequestedEvent;
 import com.simplestore.common.event.SubscriptionCycleStartedEvent;
 import com.simplestore.subscription.domain.*;
 import com.simplestore.subscription.dto.*;
 import com.simplestore.subscription.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.access.AccessDeniedException;
@@ -27,6 +29,12 @@ public class SubscriptionService {
     private final CustomerSubscriptionRepository subscriptionRepository;
     private final SubscriptionCycleRepository cycleRepository;
     private final StreamBridge streamBridge;
+
+    @Value("${app.subscription.payment.retry-count:3}")
+    private int paymentRetryCount;
+
+    @Value("${app.subscription.payment.retry-delay-ms:500}")
+    private long paymentRetryDelayMs;
 
     @Lazy
     private final SubscriptionService self;
@@ -242,13 +250,13 @@ public class SubscriptionService {
      * Each retry runs in a fresh transaction so Thread.sleep does not hold a DB connection.
      */
     public void advanceCycle(String subscriptionId, String transactionId, int cycleNumber) {
-        for (int attempt = 0; attempt < 3; attempt++) {
+        for (int attempt = 0; attempt < paymentRetryCount; attempt++) {
             if (self.tryAdvanceCycle(subscriptionId, transactionId, cycleNumber)) {
                 return;
             }
-            if (attempt < 2) {
+            if (attempt < paymentRetryCount - 1) {
                 try {
-                    Thread.sleep(500);
+                    Thread.sleep(paymentRetryDelayMs);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                     log.error("Interrupted while waiting for PENDING cycle for subscription {}", subscriptionId);
@@ -288,6 +296,21 @@ public class SubscriptionService {
 
             log.info("Cycle advanced: subscriptionId={}, cycle={}, nextBilling={}",
                     subscriptionId, cycleNumber, sub.getNextBillingDate());
+
+            // Publish box assembly event after commit
+            UUID boxCorrelationId = UUID.randomUUID();
+            String planName = sub.getPlan().getName();
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    BoxAssemblyRequestedEvent boxEvent = new BoxAssemblyRequestedEvent(
+                            boxCorrelationId, subscriptionId, sub.getUserId(), planName, cycleNumber);
+                    boolean sent = streamBridge.send("box-assembly-requested", boxEvent);
+                    if (!sent) log.error("Failed to send box-assembly-requested for subscription={}, cycle={}",
+                            subscriptionId, cycleNumber);
+                }
+            });
+
             return true;
         }
         return false; // PENDING cycle not found — caller will retry

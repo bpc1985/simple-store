@@ -1,0 +1,1 @@
+-- V1: Flyway baseline. First boot: set spring.jpa.hibernate.ddl-auto=update to create tables, then switch to validate.

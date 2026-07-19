@@ -6,6 +6,7 @@ import com.simplestore.cart.model.Cart;
 import com.simplestore.cart.model.CartItem;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -21,7 +22,9 @@ import java.util.Map;
 public class RedisCartService implements CartService {
 
     private static final String CART_KEY_PREFIX = "cart:";
-    private static final long CART_TTL_DAYS = 30;
+
+    @Value("${app.cart.ttl-days:30}")
+    private long cartTtlDays;
 
     private final StringRedisTemplate redisTemplate;
     private final ObjectMapper objectMapper;
@@ -31,7 +34,7 @@ public class RedisCartService implements CartService {
     }
 
     private void touchCart(String owner) {
-        redisTemplate.expire(cartKey(owner), java.time.Duration.ofDays(CART_TTL_DAYS));
+        redisTemplate.expire(cartKey(owner), java.time.Duration.ofDays(cartTtlDays));
     }
 
     @Override

@@ -37,4 +37,7 @@ public class PaymentAccount {
 
     @Version
     private Long version;
+
+    @Column(nullable = true, unique = true)
+    private String stripeCustomerId;
 }

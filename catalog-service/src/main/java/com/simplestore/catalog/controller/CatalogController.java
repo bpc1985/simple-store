@@ -56,7 +56,7 @@ public class CatalogController {
 
     @Operation(summary = "Update product", description = "Updates an existing product's details (admin only)")
     @PutMapping("/products/{id}")
-    public ResponseEntity<ApiResponse<Void>> updateProduct(@PathVariable Long id, @RequestBody UpdateProductRequest request) {
+    public ResponseEntity<ApiResponse<Void>> updateProduct(@PathVariable Long id, @Valid @RequestBody UpdateProductRequest request) {
         boolean updated = catalogService.updateProduct(id, request);
         if (!updated) return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Product not found"));
         return ResponseEntity.ok(ApiResponse.ok("Product updated", null));
@@ -94,14 +94,14 @@ public class CatalogController {
 
     @Operation(summary = "Create category", description = "Creates a new product category (admin only)")
     @PostMapping("/categories")
-    public ResponseEntity<ApiResponse<CategoryDto>> createCategory(@RequestBody CategoryDto dto) {
+    public ResponseEntity<ApiResponse<CategoryDto>> createCategory(@Valid @RequestBody CategoryDto dto) {
         CategoryDto category = catalogService.createCategory(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok("Category created", category));
     }
 
     @Operation(summary = "Update category", description = "Updates an existing category's details (admin only)")
     @PutMapping("/categories/{id}")
-    public ResponseEntity<ApiResponse<Void>> updateCategory(@PathVariable Long id, @RequestBody CategoryDto dto) {
+    public ResponseEntity<ApiResponse<Void>> updateCategory(@PathVariable Long id, @Valid @RequestBody CategoryDto dto) {
         boolean updated = catalogService.updateCategory(id, dto);
         if (!updated) return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Category not found"));
         return ResponseEntity.ok(ApiResponse.ok("Category updated", null));

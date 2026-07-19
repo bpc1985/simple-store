@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useSubscriptions } from "@/hooks/use-subscriptions";
+import { Alert, AlertDescription, AlertTitle } from "@simplestore/ui";
 import { Badge } from "@simplestore/ui";
 import { Button } from "@simplestore/ui";
 import { Input } from "@simplestore/ui";
@@ -61,7 +62,7 @@ export default function CustomerSubscriptionsPage() {
     return () => clearTimeout(timerRef.current);
   }, [userIdFilter]);
 
-  const { data: subscriptions, isLoading } = useSubscriptions(
+  const { data: subscriptions, isLoading, isError, error } = useSubscriptions(
     debouncedUserId || statusFilter
       ? {
           ...(statusFilter ? { status: statusFilter } : {}),
@@ -69,6 +70,22 @@ export default function CustomerSubscriptionsPage() {
         }
       : undefined
   );
+
+  if (isError) {
+    return (
+      <div className="p-6">
+        <Alert variant="destructive">
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>
+            {error instanceof Error ? error.message : "Failed to load subscriptions"}
+          </AlertDescription>
+        </Alert>
+        <Button variant="outline" className="mt-4" onClick={() => window.location.reload()}>
+          Retry
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fade-in max-w-7xl">

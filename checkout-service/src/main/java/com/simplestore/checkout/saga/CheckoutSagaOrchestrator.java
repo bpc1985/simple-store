@@ -22,6 +22,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.Instant;
 import java.util.List;
@@ -75,7 +77,13 @@ public class CheckoutSagaOrchestrator {
 
         ReserveStockRequestedEvent reserveEvent = new ReserveStockRequestedEvent(
                 event.correlationId(), event.userId(), stockItems);
-        streamBridge.send("reserve-stock-requested", reserveEvent);
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                boolean sent = streamBridge.send("reserve-stock-requested", reserveEvent);
+                if (!sent) log.error("Failed to send reserve-stock-requested for correlationId={}", event.correlationId());
+            }
+        });
         log.info("Published ReserveStockRequestedEvent: correlationId={}, reservationId={}",
                 event.correlationId(), reservationId);
     }
@@ -103,7 +111,13 @@ public class CheckoutSagaOrchestrator {
 
         ProcessPaymentRequestedEvent paymentEvent = new ProcessPaymentRequestedEvent(
                 event.correlationId(), saga.getUserId(), saga.getTotalAmount());
-        streamBridge.send("process-payment-requested", paymentEvent);
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                boolean sent = streamBridge.send("process-payment-requested", paymentEvent);
+                if (!sent) log.error("Failed to send process-payment-requested for correlationId={}", event.correlationId());
+            }
+        });
         log.info("Published ProcessPaymentRequestedEvent: correlationId={}, paymentId={}",
                 event.correlationId(), paymentId);
     }
@@ -131,7 +145,13 @@ public class CheckoutSagaOrchestrator {
 
         OrderCancelledEvent cancelledEvent = new OrderCancelledEvent(
                 event.correlationId(), saga.getUserId(), event.reason());
-        streamBridge.send("order-cancelled", cancelledEvent);
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                boolean sent = streamBridge.send("order-cancelled", cancelledEvent);
+                if (!sent) log.error("Failed to send order-cancelled for correlationId={}", event.correlationId());
+            }
+        });
         log.info("Published OrderCancelledEvent: correlationId={}",
                 event.correlationId());
     }
@@ -157,7 +177,13 @@ public class CheckoutSagaOrchestrator {
 
         OrderConfirmedEvent confirmedEvent = new OrderConfirmedEvent(
                 event.correlationId(), saga.getUserId());
-        streamBridge.send("order-confirmed", confirmedEvent);
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                boolean sent = streamBridge.send("order-confirmed", confirmedEvent);
+                if (!sent) log.error("Failed to send order-confirmed for correlationId={}", event.correlationId());
+            }
+        });
         log.info("Published OrderConfirmedEvent: correlationId={}", event.correlationId());
     }
 
@@ -185,7 +211,13 @@ public class CheckoutSagaOrchestrator {
         StockReservationCancelRequestedEvent cancelEvent =
                 new StockReservationCancelRequestedEvent(
                         event.correlationId(), saga.getUserId());
-        streamBridge.send("stock-reservation-cancel-requested", cancelEvent);
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                boolean sent = streamBridge.send("stock-reservation-cancel-requested", cancelEvent);
+                if (!sent) log.error("Failed to send stock-reservation-cancel-requested for correlationId={}", event.correlationId());
+            }
+        });
         log.info("Published StockReservationCancelRequestedEvent: correlationId={}",
                 event.correlationId());
     }
@@ -214,7 +246,13 @@ public class CheckoutSagaOrchestrator {
                 ? saga.getReason() : "Stock reservation cancelled";
         OrderCancelledEvent cancelledEvent = new OrderCancelledEvent(
                 event.correlationId(), saga.getUserId(), reason);
-        streamBridge.send("order-cancelled", cancelledEvent);
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                boolean sent = streamBridge.send("order-cancelled", cancelledEvent);
+                if (!sent) log.error("Failed to send order-cancelled for correlationId={}", event.correlationId());
+            }
+        });
         log.info("Published OrderCancelledEvent: correlationId={}", event.correlationId());
     }
 

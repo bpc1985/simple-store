@@ -8,58 +8,58 @@ import {
   useCallback,
 } from "react";
 import type { UserDto } from "@/types";
+import type { TokenResponse } from "@/types";
 import { useMe } from "@/hooks/use-auth";
+import * as identityService from "@/services/identity-service";
+import { setAccessToken } from "@/lib/api";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface AuthContextType {
-  token: string | null;
-  user: UserDto | undefined;
   isAuthenticated: boolean;
+  user: UserDto | undefined;
   isLoading: boolean;
-  login: (accessToken: string, refreshToken?: string) => void;
+  login: (tokens: TokenResponse) => void;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
-  token: null,
-  user: undefined,
   isAuthenticated: false,
+  user: undefined,
   isLoading: true,
   login: () => {},
   logout: () => {},
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [token, setToken] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
-    setToken(localStorage.getItem("token"));
     setMounted(true);
   }, []);
 
-  const { data: user, isLoading } = useMe();
+  const { data: user, isLoading, isError } = useMe();
 
-  const login = useCallback((accessToken: string, refreshToken?: string) => {
-    localStorage.setItem("token", accessToken);
-    if (refreshToken) localStorage.setItem("refreshToken", refreshToken);
-    setToken(accessToken);
-  }, []);
+  const login = useCallback((tokens: TokenResponse) => {
+    setAccessToken(tokens.accessToken);
+    queryClient.invalidateQueries({ queryKey: ["me"] });
+  }, [queryClient]);
 
   const logout = useCallback(() => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("refreshToken");
-    setToken(null);
-  }, []);
+    identityService.logout("").catch(() => {});
+    setAccessToken(null);
+    queryClient.invalidateQueries({ queryKey: ["me"] });
+    queryClient.invalidateQueries({ queryKey: ["cart"] });
+  }, [queryClient]);
 
-  const isAuthenticated = !!token;
+  const isAuthenticated = !isError && !!user;
 
   if (!mounted) {
     return (
       <AuthContext.Provider
         value={{
-          token: null,
-          user: undefined,
           isAuthenticated: false,
+          user: undefined,
           isLoading: true,
           login,
           logout,
@@ -73,9 +73,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   return (
     <AuthContext.Provider
       value={{
-        token,
-        user,
         isAuthenticated,
+        user,
         isLoading: isLoading || !mounted,
         login,
         logout,

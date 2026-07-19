@@ -17,7 +17,7 @@ export async function register(
 }
 
 export async function logout(refreshToken: string): Promise<void> {
-  return api.post("/api/v1/identity/logout", { refreshToken });
+  return api.post("/api/v1/identity/logout", { refreshToken: refreshToken || "" });
 }
 
 export async function getMe(): Promise<UserDto> {

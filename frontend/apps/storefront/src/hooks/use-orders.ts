@@ -7,8 +7,6 @@ export function useOrders() {
   return useQuery({
     queryKey: ["orders"],
     queryFn: orderService.getMyOrders,
-    enabled:
-      typeof window !== "undefined" && !!localStorage.getItem("token"),
   });
 }
 
@@ -26,8 +24,7 @@ export function useOrder(id: string) {
   return useQuery({
     queryKey: ["orders", id],
     queryFn: () => orderService.getOrder(id),
-    enabled:
-      typeof window !== "undefined" && !!localStorage.getItem("token") && !!id,
+    enabled: !!id,
   });
 }
 

@@ -1,8 +1,45 @@
 server.port: 8080
 spring:
   application.name: gateway
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
   cloud.gateway:
     routes:
+      - id: identity-register
+        uri: http://identity-service:8080
+        predicates:
+          - Path=/api/v1/identity/register
+        filters:
+          - name: RequestRateLimiter
+            args:
+              redis-rate-limiter.replenishRate: 3
+              redis-rate-limiter.burstCapacity: 5
+              redis-rate-limiter.requestedTokens: 1
+              key-resolver: "#{@ipKeyResolver}"
+      - id: identity-login
+        uri: http://identity-service:8080
+        predicates:
+          - Path=/api/v1/identity/login
+        filters:
+          - name: RequestRateLimiter
+            args:
+              redis-rate-limiter.replenishRate: 5
+              redis-rate-limiter.burstCapacity: 10
+              redis-rate-limiter.requestedTokens: 1
+              key-resolver: "#{@ipKeyResolver}"
+      - id: identity-refresh
+        uri: http://identity-service:8080
+        predicates:
+          - Path=/api/v1/identity/refresh
+        filters:
+          - name: RequestRateLimiter
+            args:
+              redis-rate-limiter.replenishRate: 5
+              redis-rate-limiter.burstCapacity: 10
+              redis-rate-limiter.requestedTokens: 1
+              key-resolver: "#{@ipKeyResolver}"
       - id: identity-service
         uri: http://identity-service:8080
         predicates:
@@ -33,12 +70,6 @@ spring:
           - Path=/api/v1/subscription/**
     default-filters:
       - DedupeResponseHeader=Access-Control-Allow-Credential Access-Control-Allow-Origin
-    globalcors:
-      cors-configurations:
-        '[/**]':
-          allowedOrigins: "*"
-          allowedMethods: "*"
-          allowedHeaders: "*"
   security.oauth2.resourceserver.jwt.secret: ${JWT_SECRET:c2ltcGxlLXN0b3JlLXNlY3JldC1rZXktZm9yLWp3dC10b2tlbnMtc2hhcmVkLWFjcm9zcy1zZXJ2aWNlcw==}
 jwt.secret: ${JWT_SECRET:c2ltcGxlLXN0b3JlLXNlY3JldC1rZXktZm9yLWp3dC10b2tlbnMtc2hhcmVkLWFjcm9zcy1zZXJ2aWNlcw==}
 

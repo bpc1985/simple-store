@@ -1,6 +1,8 @@
 "use client";
 
 import { useCategories } from "@/hooks/use-products";
+import { Alert, AlertDescription, AlertTitle } from "@simplestore/ui";
+import { Button } from "@simplestore/ui";
 import { Skeleton } from "@simplestore/ui";
 import {
   Table,
@@ -13,7 +15,23 @@ import {
 import { FolderTree } from "lucide-react";
 
 export default function CategoriesPage() {
-  const { data: categories, isLoading } = useCategories();
+  const { data: categories, isLoading, isError, error } = useCategories();
+
+  if (isError) {
+    return (
+      <div className="p-6">
+        <Alert variant="destructive">
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>
+            {error instanceof Error ? error.message : "Failed to load categories"}
+          </AlertDescription>
+        </Alert>
+        <Button variant="outline" className="mt-4" onClick={() => window.location.reload()}>
+          Retry
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fade-in max-w-4xl">

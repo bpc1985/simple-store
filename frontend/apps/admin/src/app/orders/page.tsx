@@ -3,8 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useOrders } from "@/hooks/use-orders";
-import { Button } from "@simplestore/ui";
+import { Alert, AlertDescription, AlertTitle } from "@simplestore/ui";
 import { Badge } from "@simplestore/ui";
+import { Button } from "@simplestore/ui";
 import { Skeleton } from "@simplestore/ui";
 import {
   Table,
@@ -29,10 +30,26 @@ function formatDate(iso: string) {
 
 export default function OrdersPage() {
   const [page, setPage] = useState(0);
-  const { data, isLoading } = useOrders(page);
+  const { data, isLoading, isError, error } = useOrders(page);
   const totalPages = data
     ? Math.ceil(data.totalCount / (data.pageSize || 10))
     : 0;
+
+  if (isError) {
+    return (
+      <div className="p-6">
+        <Alert variant="destructive">
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>
+            {error instanceof Error ? error.message : "Failed to load orders"}
+          </AlertDescription>
+        </Alert>
+        <Button variant="outline" className="mt-4" onClick={() => window.location.reload()}>
+          Retry
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fade-in">

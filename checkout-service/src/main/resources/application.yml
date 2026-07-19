@@ -57,3 +57,12 @@ management:
       enabled: true
     redis:
       enabled: true
+
+
+  # Flyway — versioned migrations. baseline-on-migrate handles existing tables.
+  # ponytail: ddl-auto stays 'update' because DB is empty. Switch to 'validate' after first boot creates tables.
+  flyway:
+    enabled: true
+    locations: classpath:db/migration/checkout-service
+    baseline-on-migrate: true
+    baseline-version: 1

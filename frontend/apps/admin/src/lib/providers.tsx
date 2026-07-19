@@ -4,9 +4,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Toaster } from "sonner";
-import { AuthProvider } from "@/lib/auth-context";
+import { AuthProvider, useAuth } from "@/lib/auth-context";
 import { AdminLayout } from "@/components/layout/admin-layout";
-import { TOKEN_KEY } from "@/lib/api";
 
 // ponytail: single QueryClient instance per client lifetime
 function makeQueryClient() {
@@ -28,24 +27,17 @@ function getQueryClient() {
 function AuthGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [ready, setReady] = useState(false);
+  const { isAuthenticated, isLoading } = useAuth();
 
-  // Hydrate auth state once on client — avoids SSR mismatch
-  useEffect(() => {
-    const isLoginPage = pathname === "/login";
-    const token = localStorage.getItem(TOKEN_KEY);
-
-    if (!token && !isLoginPage) {
-      router.replace("/login");
-    } else {
-      setReady(true);
-    }
-  }, [pathname, router]);
-
-  // Always render null on first pass (both server and client) to match SSR output
-  if (!ready) return null;
+  // Show nothing while auth state is being determined (session recovery in progress)
+  if (isLoading) return null;
 
   const isLoginPage = pathname === "/login";
+  if (!isAuthenticated && !isLoginPage) {
+    router.replace("/login");
+    return null;
+  }
+
   if (isLoginPage) return <>{children}</>;
 
   return <AdminLayout>{children}</AdminLayout>;

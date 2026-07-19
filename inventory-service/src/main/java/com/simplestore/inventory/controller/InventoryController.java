@@ -9,6 +9,7 @@ import com.simplestore.inventory.dto.UpdateStockRequest;
 import com.simplestore.inventory.service.InventoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -49,7 +50,7 @@ public class InventoryController {
     @PutMapping("/stock-levels/{productId}")
     public ResponseEntity<ApiResponse<StockLevelDto>> updateStockLevel(
             @PathVariable int productId,
-            @RequestBody UpdateStockRequest request) {
+            @Valid @RequestBody UpdateStockRequest request) {
         return ResponseEntity.ok(ApiResponse.ok(
                 "Stock level updated", inventoryService.updateStockLevel(productId, request.stockLevel())));
     }

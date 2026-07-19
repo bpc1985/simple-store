@@ -3,8 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePlans, useUpdatePlan } from "@/hooks/use-subscriptions";
-import { Button } from "@simplestore/ui";
+import { Alert, AlertDescription, AlertTitle } from "@simplestore/ui";
 import { Badge } from "@simplestore/ui";
+import { Button } from "@simplestore/ui";
 import { Skeleton } from "@simplestore/ui";
 import {
   Table,
@@ -27,9 +28,25 @@ function formatCurrency(n: number) {
 }
 
 export default function PlansPage() {
-  const { data: plans, isLoading } = usePlans();
+  const { data: plans, isLoading, isError, error } = usePlans();
   const updatePlan = useUpdatePlan();
   const [updatingPlanId, setUpdatingPlanId] = useState<number | null>(null);
+
+  if (isError) {
+    return (
+      <div className="p-6">
+        <Alert variant="destructive">
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>
+            {error instanceof Error ? error.message : "Failed to load plans"}
+          </AlertDescription>
+        </Alert>
+        <Button variant="outline" className="mt-4" onClick={() => window.location.reload()}>
+          Retry
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fade-in max-w-7xl">

@@ -1,9 +1,17 @@
 import axios from "axios";
 
+// In-memory access token store. Access token is short-lived (15min), refresh via httpOnly cookie.
+let accessToken: string | null = null;
+
+export function setAccessToken(token: string | null) {
+  accessToken = token;
+}
+
 const client = axios.create({
   baseURL: process.env.NEXT_PUBLIC_GATEWAY_URL,
   headers: { "Content-Type": "application/json" },
   timeout: 10000,
+  withCredentials: true,
 });
 
 let isRefreshing = false;
@@ -20,13 +28,10 @@ function processQueue(error: unknown, token: string | null) {
   failedQueue = [];
 }
 
-// Request interceptor: attach JWT from localStorage
+// Request interceptor: attach JWT from in-memory store
 client.interceptors.request.use((config) => {
-  if (typeof window !== "undefined") {
-    const token = localStorage.getItem("token");
-    if (token && token !== "null" && token !== "undefined") {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+  if (accessToken) {
+    config.headers.Authorization = `Bearer ${accessToken}`;
   }
   return config;
 });
@@ -37,7 +42,6 @@ client.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // Attempt token refresh on 401 (only once, not on login/refresh endpoints)
     if (
       error.response?.status === 401 &&
       !originalRequest._retry &&
@@ -45,16 +49,7 @@ client.interceptors.response.use(
       !originalRequest.url?.includes("/identity/refresh") &&
       typeof window !== "undefined"
     ) {
-      const refreshToken = localStorage.getItem("refreshToken");
-      if (!refreshToken) {
-        localStorage.removeItem("token");
-        localStorage.removeItem("refreshToken");
-        window.location.href = "/account/login";
-        return Promise.reject(new Error("Session expired. Please log in again."));
-      }
-
       if (isRefreshing) {
-        // Queue this request until the refresh completes
         return new Promise<string>((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         }).then((token) => {
@@ -67,21 +62,22 @@ client.interceptors.response.use(
       isRefreshing = true;
 
       try {
+        // Refresh token sent via httpOnly cookie (withCredentials)
         const res = await axios.post(
           `${process.env.NEXT_PUBLIC_GATEWAY_URL}/api/v1/identity/refresh`,
-          { refreshToken }
+          { refreshToken: "" },
+          { withCredentials: true }
         );
-        const { accessToken, refreshToken: newRefreshToken } = res.data.data;
-        localStorage.setItem("token", accessToken);
-        if (newRefreshToken) localStorage.setItem("refreshToken", newRefreshToken);
-        client.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
-        processQueue(null, accessToken);
-        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+        const { accessToken: newAccessToken } = res.data.data;
+        setAccessToken(newAccessToken);
+        processQueue(null, newAccessToken);
+        if (newAccessToken) {
+          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+        }
         return client(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError, null);
-        localStorage.removeItem("token");
-        localStorage.removeItem("refreshToken");
+        setAccessToken(null);
         window.location.href = "/account/login";
         return Promise.reject(new Error("Session expired. Please log in again."));
       } finally {
@@ -90,9 +86,10 @@ client.interceptors.response.use(
     }
 
     if (error.response?.status === 401) {
-      localStorage.removeItem("token");
-      localStorage.removeItem("refreshToken");
-      window.location.href = "/account/login";
+      setAccessToken(null);
+      if (!originalRequest.url?.includes("/identity/me")) {
+        window.location.href = "/account/login";
+      }
       return Promise.reject(new Error("Session expired. Please log in again."));
     }
     if (error.code === "ECONNABORTED") {

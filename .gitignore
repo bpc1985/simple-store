@@ -30,3 +30,12 @@ docker-compose.override.yml
 # Backup files
 *.bak
 *.orig
+
+# Frontend build artifacts (admin/ and storefront/ live at repo root)
+node_modules/
+.next/
+.turbo/
+out/
+dist/
+*.tsbuildinfo
+next-env.d.ts

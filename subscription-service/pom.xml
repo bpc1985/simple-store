@@ -69,7 +69,10 @@
             <groupId>co.elastic.apm</groupId>
             <artifactId>apm-agent-attach</artifactId>
         </dependency>
-    </dependencies>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
+        </dependency>    </dependencies>
 
     <build>
         <plugins>

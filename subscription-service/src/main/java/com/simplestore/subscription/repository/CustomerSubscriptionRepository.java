@@ -2,6 +2,7 @@ package com.simplestore.subscription.repository;
 
 import com.simplestore.subscription.domain.CustomerSubscription;
 import com.simplestore.subscription.domain.SubscriptionStatus;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -13,16 +14,20 @@ import java.util.Optional;
 @Repository
 public interface CustomerSubscriptionRepository extends JpaRepository<CustomerSubscription, String> {
 
+    @EntityGraph(attributePaths = {"plan"})
     List<CustomerSubscription> findByUserId(String userId);
 
+    @EntityGraph(attributePaths = {"plan"})
     List<CustomerSubscription> findByUserIdAndPlanId(String userId, Long planId);
 
+    @EntityGraph(attributePaths = {"plan"})
     List<CustomerSubscription> findByUserIdAndPlanIdAndStatus(String userId, Long planId, SubscriptionStatus status);
 
     /**
      * Find ACTIVE subscriptions whose next billing date is today or earlier.
      * Used by the scheduler to find cycles due for processing.
      */
+    @EntityGraph(attributePaths = {"plan"})
     List<CustomerSubscription> findByStatusAndNextBillingDateBefore(SubscriptionStatus status, LocalDate cutoff);
 
     long countByUserId(String userId);

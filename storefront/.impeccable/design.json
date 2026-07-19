@@ -1,0 +1,142 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-17T01:25:00Z",
+  "title": "Design System: SimpleStore Storefront",
+  "extensions": {
+    "colorMeta": {
+      "primary": { "role": "primary", "displayName": "Electric Blue", "canonical": "oklch(0.55 0.18 250)", "tonalRamp": ["oklch(0.15 0.18 250)", "oklch(0.25 0.18 250)", "oklch(0.35 0.18 250)", "oklch(0.45 0.18 250)", "oklch(0.55 0.18 250)", "oklch(0.65 0.18 250)", "oklch(0.75 0.18 250)", "oklch(0.85 0.18 250)"] },
+      "background": { "role": "neutral", "displayName": "Near-White Background", "canonical": "oklch(0.98 0.005 250)", "tonalRamp": ["oklch(0.15 0.005 250)", "oklch(0.30 0.005 250)", "oklch(0.45 0.005 250)", "oklch(0.60 0.005 250)", "oklch(0.75 0.005 250)", "oklch(0.85 0.005 250)", "oklch(0.92 0.005 250)", "oklch(0.98 0.005 250)"] },
+      "foreground": { "role": "neutral", "displayName": "Ink", "canonical": "oklch(0.18 0.02 260)", "tonalRamp": ["oklch(0.05 0.02 260)", "oklch(0.10 0.02 260)", "oklch(0.18 0.02 260)", "oklch(0.30 0.02 260)", "oklch(0.45 0.02 260)", "oklch(0.60 0.02 260)", "oklch(0.75 0.02 260)", "oklch(0.90 0.02 260)"] },
+      "success": { "role": "semantic", "displayName": "Success Green", "canonical": "oklch(0.55 0.12 145)", "tonalRamp": ["oklch(0.15 0.12 145)", "oklch(0.25 0.12 145)", "oklch(0.35 0.12 145)", "oklch(0.45 0.12 145)", "oklch(0.55 0.12 145)", "oklch(0.65 0.12 145)", "oklch(0.75 0.12 145)", "oklch(0.85 0.12 145)"] },
+      "warning": { "role": "semantic", "displayName": "Warning Amber", "canonical": "oklch(0.7 0.1 80)", "tonalRamp": ["oklch(0.15 0.1 80)", "oklch(0.25 0.1 80)", "oklch(0.35 0.1 80)", "oklch(0.50 0.1 80)", "oklch(0.70 0.1 80)", "oklch(0.80 0.1 80)", "oklch(0.88 0.1 80)", "oklch(0.95 0.1 80)"] },
+      "destructive": { "role": "semantic", "displayName": "Destructive Red", "canonical": "oklch(0.55 0.2 20)", "tonalRamp": ["oklch(0.15 0.2 20)", "oklch(0.25 0.2 20)", "oklch(0.35 0.2 20)", "oklch(0.45 0.2 20)", "oklch(0.55 0.2 20)", "oklch(0.65 0.2 20)", "oklch(0.75 0.2 20)", "oklch(0.85 0.2 20)"] }
+    },
+    "typographyMeta": {
+      "heading": { "displayName": "Heading", "purpose": "Page titles, section headers. 600 weight, -0.015em tracking." },
+      "body": { "displayName": "Body", "purpose": "All prose, descriptions, form labels. 16px minimum, max 65ch." },
+      "caption": { "displayName": "Caption", "purpose": "Badge text, metadata, timestamps. 12px, positive tracking." },
+      "mono": { "displayName": "Mono", "purpose": "Order IDs. Tabular figures for alignment." }
+    },
+    "shadows": [
+      { "name": "card-rest", "value": "0 1px 3px oklch(0.55 0.18 250 / 6%), 0 1px 2px oklch(0.55 0.18 250 / 4%)", "purpose": "All cards and popovers at rest." },
+      { "name": "card-hover", "value": "0 4px 12px oklch(0.55 0.18 250 / 8%)", "purpose": "Cards on hover, combined with -2px vertical lift." }
+    ],
+    "motion": [
+      { "name": "duration-instant", "value": "100ms", "purpose": "Focus rings, checkbox toggles." },
+      { "name": "duration-fast", "value": "150ms", "purpose": "Hover transitions, color changes." },
+      { "name": "duration-normal", "value": "250ms", "purpose": "Expand/collapse, slide-in panels." },
+      { "name": "duration-slow", "value": "350ms", "purpose": "Page transitions, drawer open." },
+      { "name": "ease-out", "value": "cubic-bezier(0, 0, 0.2, 1)", "purpose": "Elements entering (decelerating)." },
+      { "name": "ease-in", "value": "cubic-bezier(0.4, 0, 1, 1)", "purpose": "Elements exiting (accelerating)." },
+      { "name": "ease-standard", "value": "cubic-bezier(0.4, 0, 0.2, 1)", "purpose": "Symmetric transitions. Default easing." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Main CTA. Blue fill, white text, 12px/24px padding, 1px hover lift, full state coverage.",
+      "html": "<button class=\"ds-btn-primary\">Add to Cart</button>",
+      "css": ".ds-btn-primary { background: #2563EB; color: #fff; padding: 12px 24px; border: none; border-radius: 12px; font-family: Montserrat, system-ui, sans-serif; font-weight: 500; font-size: 14px; cursor: pointer; transition: transform 150ms cubic-bezier(0.4,0,0.2,1), box-shadow 150ms, background-color 150ms; } .ds-btn-primary:hover { background: oklch(0.55 0.18 250); transform: translateY(-1px); } .ds-btn-primary:active { transform: translateY(0); } .ds-btn-primary:focus-visible { outline: 2px solid oklch(0.55 0.18 250 / 40%); outline-offset: 2px; } .ds-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; } @media (prefers-reduced-motion: reduce) { .ds-btn-primary { transition: none; } .ds-btn-primary:hover, .ds-btn-primary:active { transform: none; } }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Transparent icon button. 44px touch target, muted bg on hover, focus ring.",
+      "html": "<button class=\"ds-btn-ghost\" aria-label=\"Shopping cart\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><circle cx=\"9\" cy=\"21\" r=\"1\"/><circle cx=\"20\" cy=\"21\" r=\"1\"/><path d=\"M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6\"/></svg></button>",
+      "css": ".ds-btn-ghost { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 12px; background: transparent; color: oklch(0.18 0.02 260); border: 1px solid transparent; cursor: pointer; transition: background-color 150ms cubic-bezier(0.4,0,0.2,1); } .ds-btn-ghost:hover { background: oklch(0.95 0.003 250); } .ds-btn-ghost:focus-visible { outline: 2px solid oklch(0.55 0.18 250 / 40%); outline-offset: 2px; }"
+    },
+    {
+      "name": "Product Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "4:5 image, title, price (tabular-nums), always-visible Add button. 2px hover lift.",
+      "html": "<div class=\"ds-card-product\"><div class=\"ds-card-product-img\"></div><div class=\"ds-card-product-body\"><span class=\"ds-card-product-title\">Product Name</span><span class=\"ds-card-product-price\">$49.99</span><button class=\"ds-btn-primary\">Add</button></div></div>",
+      "css": ".ds-card-product { border-radius: 12px; background: #fff; border: 0.5px solid oklch(0 0 0 / 6%); box-shadow: 0 1px 3px oklch(0.55 0.18 250 / 6%), 0 1px 2px oklch(0.55 0.18 250 / 4%); overflow: hidden; transition: transform 150ms, box-shadow 150ms; } .ds-card-product:hover { transform: translateY(-2px); box-shadow: 0 4px 12px oklch(0.55 0.18 250 / 8%); } .ds-card-product-img { aspect-ratio: 4/5; background: oklch(0.95 0.003 250); } .ds-card-product-body { padding: 12px 8px; display: flex; flex-direction: column; gap: 8px; } .ds-card-product-title { font-family: Montserrat; font-size: 16px; font-weight: 500; line-clamp: 2; } .ds-card-product-price { font-family: Montserrat; font-size: 14px; font-weight: 500; font-variant-numeric: tabular-nums; color: oklch(0.55 0.18 250); } @media (prefers-reduced-motion: reduce) { .ds-card-product { transition: none; } .ds-card-product:hover { transform: none; } }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Standard form input. 44px height, muted border, primary focus ring, accessible label.",
+      "html": "<div class=\"ds-input-group\"><label class=\"ds-input-label\" for=\"email\">Email</label><input class=\"ds-input\" id=\"email\" type=\"email\" placeholder=\"you@example.com\" /></div>",
+      "css": ".ds-input-group { display: flex; flex-direction: column; gap: 4px; } .ds-input-label { font-family: Montserrat; font-size: 14px; font-weight: 500; color: oklch(0.18 0.02 260); } .ds-input { height: 44px; padding: 0 16px; border: 1px solid oklch(0.88 0.01 250); border-radius: 12px; background: transparent; font-family: Montserrat; font-size: 16px; color: oklch(0.18 0.02 260); transition: border-color 150ms ease; } .ds-input:focus-visible { outline: none; border-color: #2563EB; box-shadow: 0 0 0 2px oklch(0.55 0.18 250 / 15%); } .ds-input::placeholder { color: oklch(0.42 0.01 260); }"
+    },
+    {
+      "name": "Category Pill",
+      "kind": "chip",
+      "refersTo": "category-pill",
+      "description": "Rounded-full filter chip. Active fills with primary blue. Bordered at rest.",
+      "html": "<div style=\"display:flex;gap:8px\"><span class=\"ds-pill\">All</span><span class=\"ds-pill ds-pill-active\">Electronics</span><span class=\"ds-pill\">Clothing</span></div>",
+      "css": ".ds-pill { display: inline-flex; align-items: center; padding: 6px 14px; border-radius: 9999px; border: 1px solid oklch(0.88 0.01 250); background: #fff; font-family: Montserrat; font-size: 14px; font-weight: 500; color: oklch(0.18 0.02 260); cursor: pointer; transition: all 150ms; } .ds-pill:hover { background: oklch(0.55 0.18 250 / 10%); color: #2563EB; border-color: oklch(0.55 0.18 250 / 30%); } .ds-pill-active { background: #2563EB; color: #fff; border-color: #2563EB; } .ds-pill-active:hover { background: oklch(0.55 0.18 250); color: #fff; }"
+    },
+    {
+      "name": "Stock Badge",
+      "kind": "chip",
+      "refersTo": "badge-secondary",
+      "description": "Three-tier stock indicator with semantic colors and matching icons.",
+      "html": "<div style=\"display:flex;gap:8px\"><span class=\"ds-badge-stock ds-badge-success\"><svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"3\"><polyline points=\"20 6 9 17 4 12\"/></svg>In Stock</span><span class=\"ds-badge-stock ds-badge-warning\"><svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z\"/><line x1=\"12\" y1=\"9\" x2=\"12\" y2=\"13\"/><line x1=\"12\" y1=\"17\" x2=\"12.01\" y2=\"17\"/></svg>Only 3 left</span></div>",
+      "css": ".ds-badge-stock { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; border-radius: 9999px; font-family: Montserrat; font-size: 12px; font-weight: 500; letter-spacing: 0.01em; } .ds-badge-success { background: oklch(0.55 0.12 145 / 10%); color: oklch(0.55 0.12 145); } .ds-badge-warning { background: oklch(0.7 0.1 80 / 15%); color: oklch(0.55 0.08 80); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Honest Blueprint",
+    "overview": "SimpleStore is a reference architecture, not a real brand. The interface earns trust through clarity: every interaction hits a real backend, every component uses shared tokens, every page loads without decorative theater. Clean, functional, and trustworthy — the interface proves the patterns work by being invisible enough to read the code behind them. The system uses a single sans-serif family (Montserrat) at a fixed-rem scale. One blue accent carries primary actions and current selection. The palette is Restrained: tinted cool neutrals with the accent on ≤10% of any given screen. No glassmorphism, no grain overlays, no orchestrated motion. What remains after stripping all decoration is the architecture itself — and that is the point.",
+    "keyCharacteristics": [
+      "Single sans family, fixed rem scale for product UI predictability",
+      "Restrained blue accent on primary actions only (≤10% per screen)",
+      "Flat-by-default surfaces; shadows tinted with the brand hue, never pure black",
+      "State-driven motion only (100–350ms); no choreographed sequences",
+      "12 reusable components built on shadcn/ui primitives",
+      "Full dark mode with independently-verified contrast",
+      "WCAG AA: skip link, focus rings, tabular-nums, 44px touch targets"
+    ],
+    "rules": [
+      { "name": "The One Accent Rule", "body": "Blue is the only call-to-action color. Warm amber is decorative only — never on a CTA, link, or interactive element.", "section": "colors" },
+      { "name": "The Price Neutrality Rule", "body": "Prices use foreground (Ink), not green or primary. Green implies sale. Only sale prices use destructive red.", "section": "colors" },
+      { "name": "The One Family Rule", "body": "Everything is Montserrat. Hierarchy from weight and size, not font changes. No serif pairing.", "section": "typography" },
+      { "name": "The Fixed Scale Rule", "body": "Fixed rem values, not fluid clamp(). Only hero headline scales with breakpoints.", "section": "typography" },
+      { "name": "The Tabular Money Rule", "body": "All monetary values use font-variant-numeric: tabular-nums to prevent layout shift.", "section": "typography" },
+      { "name": "The Tinted Shadow Rule", "body": "Every shadow carries the primary blue hue (250), never pure black at low opacity.", "section": "elevation" },
+      { "name": "The Flat-By-Default Rule", "body": "Surfaces are flat at rest. Shadows appear only as a response to state change.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do use design tokens for every color — no hard-coded hex or Tailwind color names",
+      "Do use Montserrat as the only font family on the page",
+      "Do use font-semibold (600) for headings, font-medium (500) for labels, font-normal (400) for body",
+      "Do tint all shadows with the primary blue hue",
+      "Do use text-wrap: balance on h1-h3",
+      "Do respect prefers-reduced-motion globally",
+      "Do use tabular-nums for all prices via [data-slot=\"price\"]",
+      "Do provide aria-label on every icon-only button",
+      "Do use visible focus rings on all interactive elements",
+      "Do provide a skip-to-content link",
+      "Do use touch-action: manipulation",
+      "Do use StyledLink for button-styled links",
+      "Do use EmptyState component for all empty content areas"
+    ],
+    "donts": [
+      "Don't use backdrop-filter, blur, grain textures, or glassmorphism",
+      "Don't add a second accent color — amber is decorative only",
+      "Don't use font-bold (700) — semibold (600) is the maximum weight",
+      "Don't center-align hero content (except homepage hero)",
+      "Don't add orchestrated page-load animations, staggered reveals, or scroll-driven sequences",
+      "Don't use border-left or border-right >1px as colored accent stripes",
+      "Don't set body text below 16px",
+      "Don't use gradient text (background-clip: text with gradient background)",
+      "Don't invent new shared components without checking existing 12-component library",
+      "Don't use green for regular prices — green means sale",
+      "Don't ship interactive elements without hover, focus, active, and disabled states",
+      "Don't omit empty, loading, or error states from data-driven pages",
+      "Don't use e-commerce clichés: countdown timers, fake urgency, fake social proof"
+    ]
+  }
+}

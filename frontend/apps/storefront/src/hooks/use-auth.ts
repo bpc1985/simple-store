@@ -35,14 +35,8 @@ export function useRegister() {
 export function useLogout() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: () => {
-      const refreshToken = localStorage.getItem("refreshToken");
-      if (refreshToken) return identityService.logout(refreshToken);
-      return Promise.resolve();
-    },
+    mutationFn: () => identityService.logout(""),
     onSettled: () => {
-      localStorage.removeItem("token");
-      localStorage.removeItem("refreshToken");
       queryClient.invalidateQueries({ queryKey: ["me"] });
       queryClient.invalidateQueries({ queryKey: ["cart"] });
     },
@@ -53,7 +47,8 @@ export function useMe() {
   return useQuery({
     queryKey: ["me"],
     queryFn: identityService.getMe,
-    enabled: typeof window !== "undefined" && !!localStorage.getItem("token"),
+    // ponytail: attempt /me on mount, cookie sent via withCredentials.
+    // 401 → isError=true → not authenticated.
     retry: false,
     staleTime: 5 * 60 * 1000,
   });

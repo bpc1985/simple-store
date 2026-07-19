@@ -11,8 +11,8 @@ export async function getMe(): Promise<User> {
   return data;
 }
 
-export async function logout(refreshToken: string): Promise<void> {
-  await api.post("/api/v1/identity/logout", { refreshToken });
+export async function logout(): Promise<void> {
+  await api.post("/api/v1/identity/logout", { refreshToken: "" });
 }
 
 export async function getUsers(page = 0): Promise<PagedResult<User>> {

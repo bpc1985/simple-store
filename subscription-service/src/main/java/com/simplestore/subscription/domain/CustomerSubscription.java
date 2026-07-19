@@ -20,7 +20,7 @@ public class CustomerSubscription {
     @Column(nullable = false, length = 36)
     private String userId;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "plan_id", nullable = false)
     private SubscriptionPlan plan;
 

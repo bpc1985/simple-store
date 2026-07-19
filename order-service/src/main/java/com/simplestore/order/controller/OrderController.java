@@ -6,6 +6,7 @@ import com.simplestore.order.dto.*;
 import com.simplestore.order.service.OrderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -47,7 +48,7 @@ public class OrderController {
     @Operation(summary = "Create order", description = "Creates a new order from cart items and initiates checkout saga")
     @PostMapping("/orders")
     public ResponseEntity<ApiResponse<OrderDto>> createOrder(@AuthenticationPrincipal Jwt jwt,
-                                                              @RequestBody CreateOrderRequest request) {
+                                                              @Valid @RequestBody CreateOrderRequest request) {
         String userId = getUserId(jwt);
         OrderDto order = orderService.createOrder(userId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok("Order created", order));

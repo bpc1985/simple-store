@@ -12,11 +12,14 @@ import com.simplestore.inventory.repository.StockEntryRepository;
 import com.simplestore.inventory.repository.StockReservationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.Instant;
 import java.util.*;
@@ -30,6 +33,9 @@ public class InventoryService {
     private final StockEntryRepository stockEntryRepository;
     private final StockReservationRepository stockReservationRepository;
     private final StreamBridge streamBridge;
+
+    @Value("${app.inventory.low-stock-threshold:10}")
+    private int lowStockThreshold;
 
     public PagedResult<StockLevelDto> getStockLevels(int page, int pageSize) {
         Page<StockEntry> entryPage = stockEntryRepository.findAll(PageRequest.of(page, pageSize));
@@ -64,7 +70,15 @@ public class InventoryService {
 
         StockLevelChangedEvent event = new StockLevelChangedEvent(
                 (long) productId, newLevel);
-        streamBridge.send("stock-level-changed", event);
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                boolean sent = streamBridge.send("stock-level-changed", event);
+                if (!sent) {
+                    log.error("Failed to send stock-level-changed event for product {}", productId);
+                }
+            }
+        });
         log.info("Stock level for product {} updated to {} and StockLevelChangedEvent published", productId, newLevel);
 
         return new StockLevelDto(entry.getProductId(), entry.getStockLevel());
@@ -77,9 +91,7 @@ public class InventoryService {
     public InventoryStatsDto getInventoryStats() {
         long totalProducts = stockEntryRepository.count();
         long totalReservations = stockReservationRepository.count();
-        long lowStockCount = stockEntryRepository.findAll().stream()
-                .filter(e -> e.getStockLevel() < 10)
-                .count();
+        long lowStockCount = stockEntryRepository.countByStockLevelLessThan(lowStockThreshold);
         return new InventoryStatsDto(totalProducts, totalReservations, lowStockCount);
     }
 
@@ -102,8 +114,14 @@ public class InventoryService {
             if (entry == null) {
                 String reason = "Product not found: " + item.productId();
                 log.warn("Stock reservation failed: {}", reason);
-                streamBridge.send("stock-reservation-failed",
-                        new StockReservationFailedEvent(event.correlationId(), event.userId(), reason));
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        boolean sent = streamBridge.send("stock-reservation-failed",
+                                new StockReservationFailedEvent(event.correlationId(), event.userId(), reason));
+                        if (!sent) log.error("Failed to send stock-reservation-failed for correlationId={}", event.correlationId());
+                    }
+                });
                 return;
             }
 
@@ -111,13 +129,20 @@ public class InventoryService {
                 String reason = "Insufficient stock for product " + item.productId()
                         + ": requested " + item.quantity() + ", available " + entry.getStockLevel();
                 log.warn("Stock reservation failed: {}", reason);
-                streamBridge.send("stock-reservation-failed",
-                        new StockReservationFailedEvent(event.correlationId(), event.userId(), reason));
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        boolean sent = streamBridge.send("stock-reservation-failed",
+                                new StockReservationFailedEvent(event.correlationId(), event.userId(), reason));
+                        if (!sent) log.error("Failed to send stock-reservation-failed for correlationId={}", event.correlationId());
+                    }
+                });
                 return;
             }
         }
 
         // All items have sufficient stock — deduct and create reservation
+        // ponytail: orderId=0 — saga-driven, ReserveStockRequestedEvent has no order ID
         StockReservation reservation = StockReservation.builder()
                 .orderId(0)
                 .correlationId(event.correlationId())
@@ -132,8 +157,14 @@ public class InventoryService {
             entry.setUpdatedAt(Instant.now());
 
             // Publish stock level change for catalog cache synchronization
-            streamBridge.send("stock-level-changed",
-                    new StockLevelChangedEvent(item.productId(), entry.getStockLevel()));
+            StockLevelChangedEvent sle = new StockLevelChangedEvent(item.productId(), entry.getStockLevel());
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    boolean sent = streamBridge.send("stock-level-changed", sle);
+                    if (!sent) log.error("Failed to send stock-level-changed for product {}", sle.productId());
+                }
+            });
 
             StockReservationItem reservationItem = StockReservationItem.builder()
                     .productId(item.productId().intValue())
@@ -146,8 +177,14 @@ public class InventoryService {
         stockReservationRepository.save(reservation);
 
         log.info("Stock reserved successfully for correlationId={}", event.correlationId());
-        streamBridge.send("stock-reserved",
-                new StockReservedEvent(event.correlationId(), event.userId()));
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                boolean sent = streamBridge.send("stock-reserved",
+                        new StockReservedEvent(event.correlationId(), event.userId()));
+                if (!sent) log.error("Failed to send stock-reserved for correlationId={}", event.correlationId());
+            }
+        });
     }
 
     @Transactional
@@ -179,8 +216,14 @@ public class InventoryService {
             stockEntryRepository.save(entry);
 
             // Publish stock level change for catalog cache synchronization
-            streamBridge.send("stock-level-changed",
-                    new StockLevelChangedEvent((long) item.getProductId(), entry.getStockLevel()));
+            StockLevelChangedEvent sle = new StockLevelChangedEvent((long) item.getProductId(), entry.getStockLevel());
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    boolean sent = streamBridge.send("stock-level-changed", sle);
+                    if (!sent) log.error("Failed to send stock-level-changed for product {}", sle.productId());
+                }
+            });
         }
 
         reservation.setStatus(ReservationStatus.CANCELLED);
@@ -188,7 +231,13 @@ public class InventoryService {
         stockReservationRepository.save(reservation);
 
         log.info("Reservation cancelled for correlationId={}", event.correlationId());
-        streamBridge.send("stock-reservation-cancelled",
-                new StockReservationCancelledEvent(event.correlationId(), event.userId()));
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                boolean sent = streamBridge.send("stock-reservation-cancelled",
+                        new StockReservationCancelledEvent(event.correlationId(), event.userId()));
+                if (!sent) log.error("Failed to send stock-reservation-cancelled for correlationId={}", event.correlationId());
+            }
+        });
     }
 }

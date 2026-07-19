@@ -1,10 +1,13 @@
 package com.simplestore.cart.controller;
 
+import com.simplestore.cart.dto.AddCartItemRequest;
+import com.simplestore.cart.dto.UpdateCartItemRequest;
 import com.simplestore.cart.model.Cart;
 import com.simplestore.cart.service.CartService;
 import com.simplestore.common.dto.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -48,21 +51,15 @@ public class CartController {
     @PostMapping("/items")
     public ResponseEntity<ApiResponse<Cart>> addItem(
             @RequestHeader Map<String, String> headers,
-            @RequestBody Map<String, Object> body,
+            @Valid @RequestBody AddCartItemRequest body,
             @AuthenticationPrincipal Jwt jwt) {
         String owner = resolveOwner(headers, jwt);
-        Object productIdObj = body.get("productId");
-        if (productIdObj == null) {
-            throw new IllegalArgumentException("productId is required");
-        }
-        Long productId = ((Number) productIdObj).longValue();
-        String productName = (String) body.getOrDefault("productName", "Product #" + productId);
-        Object priceObj = body.getOrDefault("price", null);
-        BigDecimal price = priceObj != null ? new BigDecimal(priceObj.toString()) : BigDecimal.ZERO;
-        String imageUrl = (String) body.getOrDefault("imageUrl", null);
-        int quantity = Math.max(1, ((Number) body.getOrDefault("quantity", 1)).intValue());
+        Long productId = body.productId();
+        String productName = body.productName() != null ? body.productName() : "Product #" + productId;
+        BigDecimal price = body.price() != null ? body.price() : BigDecimal.ZERO;
+        String imageUrl = body.imageUrl();
 
-        Cart cart = cartService.addItem(owner, productId, productName, price, imageUrl, quantity);
+        Cart cart = cartService.addItem(owner, productId, productName, price, imageUrl, body.quantity());
         return ResponseEntity.ok(ApiResponse.ok("Item added to cart", cart));
     }
 
@@ -71,11 +68,10 @@ public class CartController {
     public ResponseEntity<ApiResponse<Cart>> updateItemQuantity(
             @RequestHeader Map<String, String> headers,
             @PathVariable Long productId,
-            @RequestBody Map<String, Object> body,
+            @Valid @RequestBody UpdateCartItemRequest body,
             @AuthenticationPrincipal Jwt jwt) {
         String owner = resolveOwner(headers, jwt);
-        int quantity = ((Number) body.get("quantity")).intValue();
-        Cart cart = cartService.updateItemQuantity(owner, productId, quantity);
+        Cart cart = cartService.updateItemQuantity(owner, productId, body.quantity());
         return ResponseEntity.ok(ApiResponse.ok("Item quantity updated", cart));
     }
 
